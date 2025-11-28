@@ -5,7 +5,7 @@ const form = [
 ];
 
 export async function GET(req) {
-  const reports = await prisma.report.findMany();
+  const reports = await prisma.opinion.findMany();
   return new Response(JSON.stringify(reports), {
     status: 200,
     headers: { "Content-Type": "application/json" },
