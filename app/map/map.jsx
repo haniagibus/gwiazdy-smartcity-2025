@@ -24,7 +24,8 @@ export default function Map() {
     map.current = new maptilersdk.Map({
       container: mapContainer.current,
       style: maptilersdk.MapStyle.STREETS,
-      geolocate: maptilersdk.GeolocationType.POINT
+      center: [gdansk.lng, gdansk.lat],
+      zoom: zoom
     });
 
     map.current.on("load", async () => {
