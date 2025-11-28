@@ -1,151 +1,71 @@
-// components/Form.js
-
 import React, { useState } from "react";
-import styles from "../globals.css";
+import { Rating } from "react-simple-star-rating";
+import {saveFormDatasToDatabase} from "./action.js"
 
 const Form = () => {
     const [formData, setFormData] = useState({
-        firstName: "",
-        lastName: "",
-        email: "",
-        address: "",
-        age: "",
-        gender: "",
-        interests: [],
+        nick: "",
+        desc: "",
+        rating: 0,
     });
 
     const handleChange = (e) => {
-        const { name, value, type, checked, options } = e.target;
-        if (type === "checkbox") {
-            const selectedOptions = Array.from(options)
-                .filter((option) => option.selected)
-                .map((option) => option.value);
-            setFormData({ ...formData, [name]: selectedOptions });
-        } else if (type === "radio" && checked) {
-            setFormData({ ...formData, [name]: value });
-        } else {
-            setFormData({ ...formData, [name]: value });
-        }
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
     };
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        console.log("Form Data:", formData);
+    const handleRating = (rate) => {
+        setFormData({ ...formData, rating: rate });
     };
+
+    // const handleSubmit = (e) => {
+    //     e.preventDefault();
+
+    //     console.log("Form Data:", formData);
+    // };
 
     return (
-        <form className= "form" onSubmit={handleSubmit}>
-            <label htmlFor="firstName" className= "label">
-                First Name:
-            </label>
-            <input
-                type="text"
-                id="firstName"
-                name="firstName"
-                value={formData.firstName}
-                onChange={handleChange}
-                className= "input" />
+        <form className="form" action={saveFormDatasToDatabase}>
+    <label htmlFor="nick" className="label">
+        Nick:
+    </label>
+    <input
+        type="text"
+        id="nick"
+        name="nick"
+        value={formData.nick}
+        onChange={handleChange}
+        className="input"
+    />
 
-            <label htmlFor="lastName" className="label">
-                Last Name:
-            </label>
-            <input
-                type="text"
-                id="lastName"
-                name="lastName"
-                value={formData.lastName}
-                onChange={handleChange}
-                className= "input" />
+    <label htmlFor="desc" className="label">
+        Description:
+    </label>
+    <textarea
+        id="desc"
+        name="desc"
+        value={formData.desc}
+        onChange={handleChange}
+        className="textarea"
+    />
 
-            <label htmlFor="email" className= "label">
-                Email:
-            </label>
-            <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className= "input" />
+    <label className="label">Rating:</label>
+    <Rating
+        onClick={handleRating}
+        initialValue={formData.rating}
+        size={30}
+    />
 
-            <label htmlFor="address" className= "label">
-                Address:
-            </label>
-            <textarea
-                id="address"
-                name="address"
-                value={formData.address}
-                onChange={handleChange}
-                className= "input" />
+    <input type="hidden" name="rating" value={formData.rating} />
 
-            <label htmlFor="age" className= "label">
-                Age:
-            </label>
-            <input
-                type="number"
-                id="age"
-                name="age"
-                value={formData.age}
-                onChange={handleChange}
-                className= "input" />
+    <button type="submit" className="button">
+        Submit
+    </button>
 
-            <label className= "label">Gender:</label>
-
-            <span style={{ display: "flex" }}>
-                <label
-                    style={{ width: "20px" }}
-                    htmlFor="male"
-                    className= "label">
-                    Male
-                </label>
-                <input
-                    type="radio"
-                    id="male"
-                    name="gender"
-                    value="male"
-                    checked={formData.gender === "male"}
-                    onChange={handleChange}
-                    className= "radio" />
-            </span>
-            <span style={{ display: "flex" }}>
-                <label
-                    style={{ width: "20px" }}
-                    htmlFor="female"
-                    className= "label">
-                    Female
-                </label>
-                <input
-                    type="radio"
-                    id="female"
-                    name="gender"
-                    value="female"
-                    checked={formData.gender === "female"}
-                    onChange={handleChange}
-                    className= "radio" />
-            </span>
-
-            <label htmlFor="interests" className= "label">
-                Interests:
-            </label>
-            <select
-                id="interests"
-                name="interests"
-                multiple
-                value={formData.interests}
-                onChange={handleChange}
-                className= "select">
-                <option value="coding">Coding</option>
-                <option value="reading">Reading</option>
-                <option value="music">Music</option>
-            </select>
-
-            <button type="submit" className= "button">
-                Submit
-            </button>
-            <button type="reset" className= "button">
-                Reset
-            </button>
-        </form>
+    <button type="reset" className="button">
+        Reset
+    </button>
+</form>
     );
 };
 
