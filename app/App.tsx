@@ -3,7 +3,7 @@ import Map from './map/map.jsx';
 
 function App() {
   return(
-    <div className="App">
+    <div>
       <Map/>
     </div>
   )
