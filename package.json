@@ -9,10 +9,10 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@maptiler/sdk": "^3.9.0",
     "@prisma/adapter-better-sqlite3": "^7.0.1",
     "@prisma/client": "^7.0.1",
     "dotenv": "^17.2.3",
-    "@maptiler/sdk": "^3.9.0",
     "next": "16.0.5",
     "react": "19.2.0",
     "react-dom": "19.2.0"
