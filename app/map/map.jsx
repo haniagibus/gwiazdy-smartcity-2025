@@ -11,10 +11,11 @@ export default function Map() {
   const map = useRef(null);
   const gdansk = { lng: 18.638306, lat: 54.372158 };
   const zoom = 11;
+  
   maptilersdk.config.apiKey = configData.MAPTILER_API_KEY;
 
   useEffect(() => {
-    if (map.current) return; // stops map from intializing more than once
+    if (map.current) return; 
 
     map.current = new maptilersdk.Map({
       container: mapContainer.current,
@@ -22,12 +23,48 @@ export default function Map() {
       center: [gdansk.lng, gdansk.lat],
       zoom: zoom
     });
+ map.current.on("click", (e) => {
+    const { lng, lat } = e.lngLat;
 
+    const popup=new maptilersdk.Popup()
+      .setLngLat([lng, lat])
+      .setHTML(`<h3>pls dzialaj</h3><p>Lng: ${lng.toFixed(5)}, Lat: ${lat.toFixed(5)}</p>
+      <button id="openSidebarBtn">+</button>`)
+    
+      popup.on("open", () => {
+
+    const btn = document.getElementById("openSidebarBtn");
+    if (btn) {
+      btn.addEventListener("click", (ev) => {
+        ev.stopPropagation;
+        console.log("klik");
+
+        document.body.classList.add("sidebar-open"); 
+      });
+    }
+
+    const closeBtn = document.getElementById("closeSideBarbtn");
+    if (closeBtn) {
+      closeBtn.addEventListener("click", (ev) => {
+        ev.stopPropagation;
+        console.log("klik");
+
+        document.body.classList.remove("sidebar-open"); 
+      });
+    }
+    
+  });
+  popup.addTo(map.current);
+  });
   }, [gdansk.lng, gdansk.lat, zoom]);
 
   return (
     <div className="map-wrap">
       <div ref={mapContainer} className="map" />
+      <div className="sidebar">
+        TRESC!!!!!!!
+        <button id="closeSideBarbtn">-</button>
+      </div>
     </div>
   );
 }
