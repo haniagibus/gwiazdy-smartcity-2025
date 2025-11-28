@@ -1,5 +1,4 @@
 import App from "./App";
-import form from "./dashboard/page";
 
 
 export default function Home() {
