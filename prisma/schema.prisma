@@ -8,18 +8,17 @@ datasource db {
 }
 
 model Report {
-  id    Int     @id @default(autoincrement())
-  id_object Int  
-  name  String
+  id         Int      @id @default(autoincrement())
+  id_object  Int
+  name       String
   added_date DateTime
 }
 
-
 model Opinion {
-  id    Int     @id @default(autoincrement())
-  id_object Int  
-  name String
-  desc String
-  rating Int
+  id         Int      @id @default(autoincrement())
+  id_object  Int
+  name       String
+  desc       String
+  rating     Int
   added_date DateTime
 }
