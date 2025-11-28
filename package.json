@@ -9,14 +9,19 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
     "@maptiler/sdk": "^3.9.0",
+    "@mui/icons-material": "^7.3.5",
     "maplibre-gl": "^5.13.0",
     "@prisma/adapter-better-sqlite3": "^7.0.1",
     "@prisma/client": "^7.0.1",
     "dotenv": "^17.2.3",
     "next": "16.0.5",
     "react": "19.2.0",
-    "react-dom": "19.2.0"
+    "react-dom": "19.2.0",
+    "react-simple-star-rating": "^5.1.7",
+    "react-stars": "^2.2.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

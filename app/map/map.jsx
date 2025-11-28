@@ -5,6 +5,8 @@ import * as maptilersdk from '@maptiler/sdk';
 import "@maptiler/sdk/dist/maptiler-sdk.css";
 import './map.css';
 import configData from '../config/config.ts';
+import Form from "../components/form";
+
 
 export default function Map() {
   const mapContainer = useRef(null);
@@ -17,7 +19,7 @@ export default function Map() {
   let hoveredDistrictId = null;
 
   useEffect(() => {
-    if (map.current) return; // stops map from intializing more than once
+    if (map.current) return; 
 
     map.current = new maptilersdk.Map({
       container: mapContainer.current,
@@ -107,12 +109,48 @@ export default function Map() {
         map.current.getCanvas().style.cursor = '';
       });      
     });
+ map.current.on("click", (e) => {
+    const { lng, lat } = e.lngLat;
 
+    const popup=new maptilersdk.Popup()
+      .setLngLat([lng, lat])
+      .setHTML(`<h3>pls dzialaj</h3><p>Lng: ${lng.toFixed(5)}, Lat: ${lat.toFixed(5)}</p>
+      <button id="openSidebarBtn">+</button>`)
+    
+      popup.on("open", () => {
+
+    const btn = document.getElementById("openSidebarBtn");
+    if (btn) {
+      btn.addEventListener("click", (ev) => {
+        ev.stopPropagation;
+        console.log("klik");
+
+        document.body.classList.add("sidebar-open"); 
+      });
+    }
+
+    const closeBtn = document.getElementById("closeSideBarbtn");
+    if (closeBtn) {
+      closeBtn.addEventListener("click", (ev) => {
+        ev.stopPropagation;
+        console.log("klik");
+
+        document.body.classList.remove("sidebar-open"); 
+      });
+    }
+    
+  });
+  popup.addTo(map.current);
+  });
   }, [gdansk.lng, gdansk.lat, zoom]);
 
   return (
     <div className="map-wrap">
       <div ref={mapContainer} className="map" />
+      <div className="sidebar">
+        <Form/>
+        <button id="closeSideBarbtn">-</button>
+      </div>
     </div>
   );
 }
