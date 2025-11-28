@@ -1,0 +1,13 @@
+###
+GET http://localhost:3000/api/opinion
+Accept: applictation/json
+###
+POST http://localhost:3000/api/opinion
+Content-Type: application/json
+Accept: applictaion/json
+
+{
+  "id_object":2,
+  "name": "michella",
+  "added_date": "2003-11-28T12:14:20.263Z"
+}

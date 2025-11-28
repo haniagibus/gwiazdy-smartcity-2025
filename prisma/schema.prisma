@@ -1,0 +1,24 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Report {
+  id    Int     @id @default(autoincrement())
+  id_object Int  
+  name  String
+  added_date DateTime
+}
+
+
+model Opinion {
+  id    Int     @id @default(autoincrement())
+  id_object Int  
+  name  String
+  stars Int
+  added_date DateTime
+}
