@@ -10,10 +10,11 @@ export const saveFormDatasToDatabase = async (formData) => {
   console.log("DESC:", desc);
   console.log("RATING:", rating);
 
-    const report = await prisma.report.create({
+    const report = await prisma.opinion.create({
       data: {
         id_object: 1,
         name: nick,
+        rating: rating,
         added_date: new Date(),
       },
     });

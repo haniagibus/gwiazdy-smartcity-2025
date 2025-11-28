@@ -18,7 +18,8 @@ model Report {
 model Opinion {
   id    Int     @id @default(autoincrement())
   id_object Int  
-  name  String
-  stars Int
+  name String
+  desc String
+  rating Int
   added_date DateTime
 }
