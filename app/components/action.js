@@ -14,8 +14,9 @@ export const saveFormDatasToDatabase = async (formData) => {
       data: {
         id_object: 1,
         name: nick,
-        rating: rating,
+        rating: Number(rating),
         added_date: new Date(),
+        desc: desc,
       },
     });
 
