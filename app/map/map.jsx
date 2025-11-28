@@ -5,6 +5,8 @@ import * as maptilersdk from '@maptiler/sdk';
 import "@maptiler/sdk/dist/maptiler-sdk.css";
 import './map.css';
 import configData from '../config/config.ts';
+import Form from "../components/form";
+
 
 export default function Map() {
   const mapContainer = useRef(null);
@@ -62,7 +64,7 @@ export default function Map() {
     <div className="map-wrap">
       <div ref={mapContainer} className="map" />
       <div className="sidebar">
-        TRESC!!!!!!!
+        <Form/>
         <button id="closeSideBarbtn">-</button>
       </div>
     </div>
