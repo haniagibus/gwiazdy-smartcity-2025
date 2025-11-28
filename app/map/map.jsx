@@ -31,7 +31,8 @@ export default function Map() {
       container: mapContainer.current,
       style: maptilersdk.MapStyle.STREETS,
       center: [gdansk.lng, gdansk.lat],
-      zoom: zoom
+      zoom: zoom,
+      fullscreenControl: true
     });
 
     map.current.on("load", async () => {
@@ -49,13 +50,52 @@ export default function Map() {
         type: 'fill',
         source: 'districts',
         layout: {},
-        paint: {
-          'fill-color': '#627BC1',
+        // paint: {
+        //   'fill-color': '#627BC1',
+        //   'fill-opacity': [
+        //     'case',
+        //     ['boolean', ['feature-state', 'hover'], false],
+        //     0.6,
+        //     0.2
+        //   ]
+        // }
+        'paint': {
+          'fill-color': [
+            'let',
+            'density',
+            ['get', 'GEST_ZAL'],
+            [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              8,
+              [
+                'interpolate',
+                ['linear'],
+                ['var', 'density'],
+                274,
+                ['to-color', '#edf8e9'],
+                1551,
+                ['to-color', '#006d2c']
+              ],
+              10,
+              [
+                'interpolate',
+                ['linear'],
+                ['var', 'density'],
+                274,
+                ['to-color', '#eff3ff'],
+                1551,
+                ['to-color', '#08519c']
+
+              ]
+            ]
+          ],
           'fill-opacity': [
             'case',
             ['boolean', ['feature-state', 'hover'], false],
-            0.6,
-            0.2
+            1,
+            0.6
           ]
         }
       });
@@ -66,8 +106,9 @@ export default function Map() {
         source: 'districts',
         layout: {},
         paint: {
-          'line-color': '#627BC1',
-          'line-width': 2
+          'line-color': '#08519c',
+          'line-width': 2,
+          'line-opacity': 0.7
         }
       });
 
@@ -116,9 +157,17 @@ map.current.addLayer({
       // When a click event occurs on a feature in the states layer, open a popup at the
       // location of the click, with description HTML from its properties.
       map.current.on('click', 'districts-layer', function (e) {
+        const description = `
+          <h2 style="text-align: center;">${e.features[0].properties.DZIELNICY}</h2>
+          <p><b>Mieszkańcy:</b> ${e.features[0].properties.L_MIESZK}</p>
+          <p><b>Powierzchnia:</b> ${e.features[0].properties.POWIERZCHN} km²</p>
+          <p><b>Gęstość zaludnienia:</b> ${e.features[0].properties.GEST_ZAL} osób/km²</p>
+          <p><b>Saldo migracyjne:</b> ${e.features[0].properties.SALDO_MIGR}</p>
+        `;
+
         new maptilersdk.Popup()
           .setLngLat(e.lngLat)
-          .setHTML(e.features[0].properties.DZIELNICY)
+          .setHTML(description)
           .addTo(map.current);
       });
 
@@ -138,7 +187,7 @@ map.current.addLayer({
         hoveredDistrictId = null;
 
         map.current.getCanvas().style.cursor = '';
-      });      
+      });
     });
  map.current.on("click", (e) => {
     const { lng, lat } = e.lngLat;
