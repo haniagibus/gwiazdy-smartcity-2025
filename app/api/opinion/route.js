@@ -5,7 +5,7 @@ const form = [
 ];
 
 export async function GET(req) {
-  const reports = await prisma.report.findMany();
+  const reports = await prisma.opinion.findMany();
   return new Response(JSON.stringify(reports), {
     status: 200,
     headers: { "Content-Type": "application/json" },
@@ -15,7 +15,7 @@ export async function GET(req) {
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { id_object, name, added_date } = body;
+    const { id_object, name, desc, rating, added_date } = body;
 
     if (!id_object || !name) {
       return new Response(JSON.stringify({ error: 'missing data' }), { status: 400 });
@@ -25,6 +25,8 @@ export async function POST(req) {
       data: {
         id_object,
         name,
+        desc,
+        rating,
         added_date,
       },
     });

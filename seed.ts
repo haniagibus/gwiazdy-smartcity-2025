@@ -1,8 +1,8 @@
 import { prisma } from './lib/prisma'
 
 async function main() {
-  // await prisma.report.deleteMany();
-  // await prisma.opinion.deleteMany();
+   await prisma.report.deleteMany();
+   await prisma.opinion.deleteMany();
 
   const report1 = await prisma.report.create({
     data: {

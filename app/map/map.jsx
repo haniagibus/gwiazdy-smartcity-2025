@@ -1,16 +1,19 @@
 'use client'
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect,useState } from 'react';
 import * as maptilersdk from '@maptiler/sdk';
 import "@maptiler/sdk/dist/maptiler-sdk.css";
 import './map.css';
 import configData from '../config/config.ts';
 import Form from "../components/form";
 
+const LAYERS = ['districts-layer','airports'];
 
 export default function Map() {
   const mapContainer = useRef(null);
   const map = useRef(null);
+  const [activeLayer, setActiveLayer] = useState('districts-layer'); 
+  
   const gdansk = { lng: 18.638306, lat: 54.372158 };
   const zoom = 11;
   const demography_dataset_id = configData.MAPTILER_DATSET_ID;
@@ -64,7 +67,22 @@ export default function Map() {
           'line-width': 2
         }
       });
-
+      map.current.addSource('airports', {
+  type: 'geojson',
+  data: 'https://d2ad6b4ur7yvpq.cloudfront.net/naturalearth-3.3.0/ne_10m_ports.geojson'
+});
+const image = await map.current.loadImage('https://docs.maptiler.com/sdk-js/examples/geojson-point/icon-plane-512.png');
+map.current.addImage('plane', image.data);
+map.current.addLayer({
+  'id': 'airports',
+  'type': 'symbol',
+  'source': 'airports',
+  'layout': {
+    'icon-image': 'plane',
+    'icon-size': ['*', ['get', 'scalerank'] ,0.01]
+  },
+  'paint': {}
+});
       // When the user moves their mouse over the state-fill layer, we'll update the
       // feature state for the feature under the mouse.
       map.current.on('mousemove', 'districts-layer', function (e) {
@@ -82,6 +100,8 @@ export default function Map() {
           );
         }
       });
+      
+      
 
       // When a click event occurs on a feature in the states layer, open a popup at the
       // location of the click, with description HTML from its properties.
@@ -144,9 +164,55 @@ export default function Map() {
   popup.addTo(map.current);
   });
   }, [gdansk.lng, gdansk.lat, zoom]);
+useEffect(() => {
+  if (!map.current) return;
+
+  LAYERS.forEach(id => {
+    if (!map.current.getLayer(id)) return;
+
+    map.current.setLayoutProperty(
+      id,
+      'visibility',
+      id === activeLayer ? 'visible' : 'none'
+    );
+  });
+
+  if (map.current.getLayer('district-borders')) {
+    const districtsVisibility = map.current.getLayoutProperty('districts-layer', 'visibility');
+    map.current.setLayoutProperty(
+      'district-borders',
+      'visibility',
+      districtsVisibility || 'none'
+    );
+  }
+}, [activeLayer]);
+
 
   return (
     <div className="map-wrap">
+    <div id="mySidenav" className="sidenav">
+<a
+  href="#"
+  id="demografia"
+  onClick={(e) => {
+    e.preventDefault();
+    setActiveLayer('districts-layer');
+  }}
+>
+   
+    <i>Demografia </i>
+    
+</a>
+  <a href="#" id="wydarzenia" onClick={(e) => {
+    e.preventDefault();
+    setActiveLayer('airports');
+  }}><i>Usługi</i></a>
+  
+  <a href="#" id="zgloszenia"><i>Zgłoszenia</i></a>
+
+</div>
+
+
       <div ref={mapContainer} className="map" />
       <div className="sidebar">
         <Form/>
@@ -155,3 +221,4 @@ export default function Map() {
     </div>
   );
 }
+     
