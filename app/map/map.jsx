@@ -5,7 +5,10 @@ import * as maptilersdk from '@maptiler/sdk';
 import "@maptiler/sdk/dist/maptiler-sdk.css";
 import './map.css';
 import configData from '../config/config.ts';
-import Form from "../components/form";
+import OpinionForm from "../components/opinion_form";
+import '@maptiler/sdk/dist/maptiler-sdk.css';
+import { GeocodingControl } from '@maptiler/geocoding-control/maptilersdk';
+import '@maptiler/geocoding-control/style.css';
 
 const LAYERS = ['districts-layer','airports'];
 
@@ -67,6 +70,13 @@ export default function Map() {
           'line-width': 2
         }
       });
+
+      const geocoder = new GeocodingControl({
+         //bbox: [18.31, 54.29, 18.87, 54.45]
+      });
+
+      map.current.addControl(geocoder, "bottom-right");
+
       map.current.addSource('airports', {
   type: 'geojson',
   data: 'https://d2ad6b4ur7yvpq.cloudfront.net/naturalearth-3.3.0/ne_10m_ports.geojson'
@@ -215,7 +225,7 @@ useEffect(() => {
 
       <div ref={mapContainer} className="map" />
       <div className="sidebar">
-        <Form/>
+        <OpinionForm/>
         <button id="closeSideBarbtn">-</button>
       </div>
     </div>

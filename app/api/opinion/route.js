@@ -21,7 +21,7 @@ export async function POST(req) {
       return new Response(JSON.stringify({ error: 'missing data' }), { status: 400 });
     }
 
-    const newReport = await prisma.report.create({
+    const newOpinion = await prisma.opinion.create({
       data: {
         id_object,
         name,
@@ -31,12 +31,12 @@ export async function POST(req) {
       },
     });
 
-    return new Response(JSON.stringify(newReport), {
+    return new Response(JSON.stringify(newOpinion), {
       status: 201,
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
     console.error(error);
-    return new Response(JSON.stringify({ error: 'Failed to create report' }), { status: 500 });
+    return new Response(JSON.stringify({ error: 'Failed to create opinion' }), { status: 500 });
   }
 }

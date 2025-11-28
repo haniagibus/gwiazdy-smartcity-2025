@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Rating } from "react-simple-star-rating";
-import {saveFormDatasToDatabase} from "./action.js"
+import {saveOpinionToDatabase} from "../services/action.js"
 
-const Form = () => {
+const OpinionForm = () => {
     const [formData, setFormData] = useState({
         nick: "",
         desc: "",
@@ -18,14 +18,30 @@ const Form = () => {
         setFormData({ ...formData, rating: rate });
     };
 
-    // const handleSubmit = (e) => {
-    //     e.preventDefault();
+    const handleReset = () => {
+    setFormData({
+        nick: "",
+        desc: "",
+        rating: 0,
+    });
+    };
 
-    //     console.log("Form Data:", formData);
-    // };
+    const handleSubmit = async (e) => {
+        e.preventDefault(); 
+
+        const data = new FormData(e.target); 
+
+        await saveOpinionToDatabase(data);
+
+        setFormData({
+            nick: "",
+            desc: "",
+            rating: 0,
+        });
+    };  
 
     return (
-        <form className="form" action={saveFormDatasToDatabase}>
+        <form className="form" onSubmit={handleSubmit}>
     <label htmlFor="nick" className="label">
         Nick:
     </label>
@@ -62,11 +78,11 @@ const Form = () => {
         Submit
     </button>
 
-    <button type="reset" className="button">
+    <button type="reset" className="button" onClick={handleReset}>
         Reset
     </button>
 </form>
     );
 };
 
-export default Form;
+export default OpinionForm;
