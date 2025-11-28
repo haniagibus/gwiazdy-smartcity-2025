@@ -31,8 +31,7 @@ export default function Map() {
 
       map.current.addSource('districts', {
         type: 'geojson',
-        data: demography_dataset,
-        promoteId: 'unique_id'
+        data: demography_dataset
       });
 
       // The feature-district dependent fill-opacity expression will render the hover effect
@@ -47,8 +46,8 @@ export default function Map() {
           'fill-opacity': [
             'case',
             ['boolean', ['feature-state', 'hover'], false],
-            1,
-            0.5
+            0.6,
+            0.2
           ]
         }
       });
@@ -64,12 +63,30 @@ export default function Map() {
         }
       });
 
+      // When the user moves their mouse over the state-fill layer, we'll update the
+      // feature state for the feature under the mouse.
+      map.current.on('mousemove', 'districts-layer', function (e) {
+        if (e.features.length > 0) {
+          if (hoveredDistrictId) {
+            map.current.setFeatureState(
+              { source: 'districts', id: hoveredDistrictId },
+              { hover: false }
+            );
+          }
+          hoveredDistrictId = e.features[0].id;
+          map.current.setFeatureState(
+            { source: 'districts', id: hoveredDistrictId },
+            { hover: true }
+          );
+        }
+      });
+
       // When a click event occurs on a feature in the states layer, open a popup at the
       // location of the click, with description HTML from its properties.
       map.current.on('click', 'districts-layer', function (e) {
         new maptilersdk.Popup()
           .setLngLat(e.lngLat)
-          .setHTML(e.features[0].properties.name)
+          .setHTML(e.features[0].properties.DZIELNICY)
           .addTo(map.current);
       });
 
@@ -80,38 +97,16 @@ export default function Map() {
 
       // Change it back to a pointer when it leaves.
       map.current.on('mouseleave', 'districts-layer', function () {
+        if (hoveredDistrictId) {
+          map.current.setFeatureState(
+            { source: 'districts', id: hoveredDistrictId },
+            { hover: false }
+          );
+        }
+        hoveredDistrictId = null;
+
         map.current.getCanvas().style.cursor = '';
-      });
-
-      // // When the user moves their mouse over the state-fill layer, we'll update the
-      // // feature state for the feature under the mouse.
-      // map.current.on('mousemove', 'district-fills', function (e) {
-      //   if (e.features.length > 0) {
-      //     if (hoveredDistrictId) {
-      //       map.current.setFeatureState(
-      //         { source: 'districts', id: hoveredDistrictId },
-      //         { hover: false }
-      //       );
-      //     }
-      //     hoveredDistrictId = e.features[0].id;
-      //     map.current.setFeatureState(
-      //       { source: 'districts', id: hoveredDistrictId },
-      //       { hover: true }
-      //     );
-      //   }
-      // });
-
-      // // When the mouse leaves the state-fill layer, update the feature state of the
-      // // previously hovered feature.
-      // map.current.on('mouseleave', 'district-fills', function () {
-      //   if (hoveredDistrictId) {
-      //     map.current.setFeatureState(
-      //       { source: 'districts', id: hoveredDistrictId },
-      //       { hover: false }
-      //     );
-      //   }
-      //   hoveredDistrictId = null;
-      // });
+      });      
     });
 
   }, [gdansk.lng, gdansk.lat, zoom]);
