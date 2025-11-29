@@ -45,41 +45,54 @@ body.sidebar-reports-open .sidebar-reports {
   right: 0;
 }
 
+.sidenav {
+  position: fixed;
+  top: 50px;
+  left: 0;
+  z-index: 10000;
+}
+
 .sidenav a {
-  left: -130px;
-  transition: 0.3s;
+  position: fixed;
+  left: -160px;
   padding: 15px;
-  width: 130px;
+  width: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: white;
   text-decoration: none;
   font-size: 20px;
-  color: white;
   border-radius: 0 5px 5px 0;
-   position: fixed;    
-  top: 50px;            
-  z-index: 10000;   
+  transition: left 0.3s ease;
 }
 
 .sidenav a:hover {
   left: 0;
 }
 
+/* Od dołu */
 #demografia {
-  font-size: 20px;
-  top: 20px;
+  bottom: 170px;
   background-color: #77B8F8;
 }
 
 #wydarzenia {
-  font-size: 20px;
-  top: 80px;
+  bottom: 110px;
   background-color: #1685F3;
 }
 
 #zgloszenia {
-  font-size: 20px;
-  top: 140px;
-  background-color: #0B70D5;
+  bottom: 50px;
+  background-color: #063d74;
 }
+
+.sidenav img {
+  width: 24px;
+  height: 24px;
+}
+
 
 
 .event-card {
@@ -97,19 +110,6 @@ body.sidebar-reports-open .sidebar-reports {
   animation: fadeIn 0.2s ease-out;
 }
 
-.event-header h2 {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 600;
-  color: #0B70D5;
-}
-
-.event-datetime {
-  display: flex;
-  justify-content: space-between;
-  font-size: 14px;
-  color: #666;
-}
 
 .event-image {
   width: 100%;
@@ -131,6 +131,7 @@ body.sidebar-reports-open .sidebar-reports {
 .event-info strong {
   color: #0B70D5;
 }
+
 
 
 
