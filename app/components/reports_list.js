@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { getReportsFromDatabase } from "../services/action.js";
 import ReportForm from "./report_form.js";
 
+
 const ReportList = ({ lng, lat }) => {
     const [reports, setReports] = useState([]);
     const [showForm, setShowForm] = useState(false);

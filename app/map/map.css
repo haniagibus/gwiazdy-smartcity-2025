@@ -45,6 +45,13 @@ body.sidebar-reports-open .sidebar-reports {
   right: 0;
 }
 
+.sidenav {
+  position: fixed;
+  top: 50px;
+  left: 0;
+  z-index: 10000;
+}
+
 .sidenav a {
   position: fixed;
   left: -160px;
@@ -103,19 +110,6 @@ body.sidebar-reports-open .sidebar-reports {
   animation: fadeIn 0.2s ease-out;
 }
 
-.event-header h2 {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 600;
-  color: #0B70D5;
-}
-
-.event-datetime {
-  display: flex;
-  justify-content: space-between;
-  font-size: 14px;
-  color: #666;
-}
 
 .event-image {
   width: 100%;

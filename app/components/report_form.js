@@ -29,14 +29,21 @@ const ReportForm = ({ lng, lat }) => {
 
         const data = new FormData(e.target); 
 
-        await saveReportToDatabase(data);
-
+         try {
+        const savedReport = await saveReportToDatabase(data); 
+        console.log("Zapisano raport:", savedReport);
         setFormData({
             x_coord: lng,
             y_coord: lat,
             nick: "",
             desc: "",
         });
+        
+
+    } catch (error) {
+        console.error("Błąd zapisu raportu:", error);
+    }
+
     }; 
 
     return (
