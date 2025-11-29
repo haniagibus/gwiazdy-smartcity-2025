@@ -10,7 +10,7 @@ import '@maptiler/sdk/dist/maptiler-sdk.css';
 import { GeocodingControl } from '@maptiler/geocoding-control/maptilersdk';
 import '@maptiler/geocoding-control/style.css';
 
-const LAYERS = ['districts-layer','events'];
+const LAYERS = ['districts-layer', 'events'];
 
 export default function Map() {
   const mapContainer = useRef(null);
@@ -94,7 +94,7 @@ export default function Map() {
           'fill-opacity': [
             'case',
             ['boolean', ['feature-state', 'hover'], false],
-            1,
+            0.9,
             0.6
           ]
         }
@@ -111,15 +111,26 @@ export default function Map() {
           'line-opacity': 0.7
         }
       });
-     
+
+      map.current.addLayer({
+        id: 'district-fills',
+        type: 'fill',
+        source: 'districts',
+        layout: {},
+        paint: {
+          'fill-color': '#08519c',
+          'fill-opacity': 0.1
+        }
+      });
+
 
       const geocoder = new GeocodingControl({
         //bbox: [18.31, 54.29, 18.87, 54.45]
       });
 
-      map.current.addControl(geocoder, "bottom-right");
+      map.current.addControl(geocoder, "top-left");
 
-    
+
       // When the user moves their mouse over the state-fill layer, we'll update the
       // feature state for the feature under the mouse.
       map.current.on('mousemove', 'districts-layer', function (e) {
@@ -175,63 +186,63 @@ export default function Map() {
         map.current.getCanvas().style.cursor = '';
       });
     });
-     map.current.on('load', async () => {
+    map.current.on('load', async () => {
       const image = await map.current.loadImage("/star.png");
       map.current.addImage('pinMetro', image.data);
-          fetch('/data.csv') 
-  .then((res) => res.text())
-  .then((text) => {
-    const lines = text.trim().split('\n');
+      fetch('/data.csv')
+        .then((res) => res.text())
+        .then((text) => {
+          const lines = text.trim().split('\n');
 
-    const header = lines[0].split(',').map(h => h.trim()); 
+          const header = lines[0].split(',').map(h => h.trim());
 
-    const features = lines.slice(1).map((line) => {
-      const cols = line.split(',').map(c => c.trim());      
-      const obj={};
-      
-      header.forEach((h, i) => {
-        obj[h] = cols[i];
-      });
+          const features = lines.slice(1).map((line) => {
+            const cols = line.split(',').map(c => c.trim());
+            const obj = {};
 
-      const lat = parseFloat(obj.lat);
-      const lon = parseFloat(obj.lon);
+            header.forEach((h, i) => {
+              obj[h] = cols[i];
+            });
 
-      return {
-        type: 'Feature',
-        geometry: {
-          type: 'Point',
-          coordinates: [lon, lat],
-        },
-        properties: obj,
-      };
-    });
-    
-    const geojson = {
-      type: 'FeatureCollection',
-      features,
-    };
-    console.log(geojson);
+            const lat = parseFloat(obj.lat);
+            const lon = parseFloat(obj.lon);
 
-    map.current.addSource('events', {
-      type: 'geojson',
-      data: geojson,
-    });
+            return {
+              type: 'Feature',
+              geometry: {
+                type: 'Point',
+                coordinates: [lon, lat],
+              },
+              properties: obj,
+            };
+          });
 
-    map.current.addLayer({
-      id: 'events',
-      type: 'symbol', 
-      source: 'events',
-      layout:{
-        visibility: activeLayer === 'events' ? 'visible' : 'none',
-        'icon-image': 'pinMetro',
-        'icon-size': 0.8
-      },
-    });
-  });
+          const geojson = {
+            type: 'FeatureCollection',
+            features,
+          };
+          console.log(geojson);
 
+          map.current.addSource('events', {
+            type: 'geojson',
+            data: geojson,
+          });
+
+          map.current.addLayer({
+            id: 'events',
+            type: 'symbol',
+            source: 'events',
+            layout: {
+              visibility: activeLayer === 'events' ? 'visible' : 'none',
+              'icon-image': 'pinMetro',
+              'icon-size': 0.8
+            },
+          });
         });
- map.current.on("click", 'districts-layer',(e)=> {
-    const { lng, lat } = e.lngLat;
+
+    });
+    map.current.on("click", 'districts-layer', (e) => {
+      const { lng, lat } = e.lngLat;
 
       const popup = new maptilersdk.Popup()
         .setLngLat([lng, lat])
@@ -265,78 +276,84 @@ export default function Map() {
     });
   }, [gdansk.lng, gdansk.lat, zoom]);
 
-useEffect(() => {
-  if (!map.current) return;
+  useEffect(() => {
+    if (!map.current) return;
 
-  LAYERS.forEach(id => {
-    if (!map.current.getLayer(id)) return;
+    LAYERS.forEach(id => {
+      if (!map.current.getLayer(id)) return;
 
-    map.current.setLayoutProperty(
-      id,
-      'visibility',
-      id === activeLayer ? 'visible' : 'none'
-    );
-  });
-map.current.on("click", 'events',(e) => {
-  const props=e.features[0].properties;
-    new maptilersdk.Popup()
-    .setLngLat(e.lngLat)
-    .setHTML(`
+      map.current.setLayoutProperty(
+        id,
+        'visibility',
+        id === activeLayer ? 'visible' : 'none'
+      );
+    });
+    map.current.on("click", 'events', (e) => {
+      const props = e.features[0].properties;
+      new maptilersdk.Popup()
+        .setLngLat(e.lngLat)
+        .setHTML(`
       <h3>${props.name}</h3>
       <p>${props.date} ${props.hour}</p>
       <p>${props.place_name}, ${props.street}, ${props.city}</p>
       ${props.image ? `<img src="${props.image}" style="max-width:150px" />` : ''}
       
     `)
-    .addTo(map.current);
+        .addTo(map.current);
 
-});
-  // if (map.current.getLayer('district-borders')) {
-  //   const districtsVisibility = map.current.getLayoutProperty('districts-layer', 'visibility');
-  //   map.current.setLayoutProperty(
-  //     'district-borders',
-  //     'visibility',
-  //     districtsVisibility || 'none'
-  //   );
-  // }
-  // if (map.current.getLayer('events')) {
-  //   const districtsVisibility = map.current.getLayoutProperty('events', 'visibility');
-  //   map.current.setLayoutProperty(
-  //     'district-borders',
-  //     'visibility',
-  //     districtsVisibility || 'none'
-  //   );
-  // }
-}, [activeLayer]);
-
-
-       
-
-
+    });
+    // if (map.current.getLayer('district-borders')) {
+    //   const districtsVisibility = map.current.getLayoutProperty('districts-layer', 'visibility');
+    //   map.current.setLayoutProperty(
+    //     'district-borders',
+    //     'visibility',
+    //     districtsVisibility || 'none'
+    //   );
+    // }
+    // if (map.current.getLayer('events')) {
+    //   const districtsVisibility = map.current.getLayoutProperty('events', 'visibility');
+    //   map.current.setLayoutProperty(
+    //     'district-borders',
+    //     'visibility',
+    //     districtsVisibility || 'none'
+    //   );
+    // }
+  }, [activeLayer]);
 
   return (
     <div className="map-wrap">
-    <div id="mySidenav" className="sidenav">
-<a
-  href="#"
-  id="demografia"
-  onClick={(e) => {
-    e.preventDefault();
-    setActiveLayer('districts-layer');
-  }}
->
-   
-    <i>Demografia </i>
-    
-</a>
-  <a href="#" id="wydarzenia" onClick={(e) => {
-    e.preventDefault();
-   setActiveLayer('events');
-  }}><i>Usługi</i></a>
+      <div id="mySidenav" className="sidenav">
+        <a
+          href="#"
+          id="demografia"
+          onClick={(e) => {
+            e.preventDefault();
+            setActiveLayer('districts-layer');
+          }}
+        >
+          <b>Demografia</b>
+          <img src="/group_nav.png" alt="Demografia" />
+        </a>
 
-  <a href="#" id="zgloszenia"><i>Zgłoszenia</i></a>
+        <a
+          href="#"
+          id="wydarzenia"
+          onClick={(e) => {
+            e.preventDefault();
+            setActiveLayer('events');
+          }}
+        >
+          <b>Usługi</b>
+          <img src="/star_nav.png" alt="Usługi" />
+        </a>
 
-</div>
+        <a href="#" id="zgloszenia">
+          <b>Zgłoszenia</b>
+          <img src="/symbol_excla_nav.png" alt="Zgłoszenia" />
+        </a>
+      </div>
+
+
 
 
       <div ref={mapContainer} className="map" />
