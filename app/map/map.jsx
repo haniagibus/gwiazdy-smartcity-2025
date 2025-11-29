@@ -132,9 +132,9 @@ export default function Map() {
       });
      
 
-      const geocoder = new GeocodingControl({
-        //bbox: [18.31, 54.29, 18.87, 54.45]
-      });
+      // const geocoder = new GeocodingControl({
+      //   //bbox: [18.31, 54.29, 18.87, 54.45]
+      // });
 
       // [REPORTS LAYER]
       map.current.addLayer({
