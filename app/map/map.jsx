@@ -17,6 +17,7 @@ export default function Map() {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const [activeLayer, setActiveLayer] = useState('districts-layer');
+  const [selectedEvent, setSelectedEvent] = useState(null);
 
   const gdansk = { lng: 18.638306, lat: 54.372158 };
   const zoom = 11;
@@ -288,41 +289,94 @@ export default function Map() {
       },
     });
   });
+  map.current.on("click", "events", (e) => {
+  if (!e.features?.length) return;
+
+  const props = e.features[0].properties;
+
+  const popup = new maptilersdk.Popup()
+    .setLngLat(e.lngLat)
+    .setHTML(`
+      <h3>${props.name}</h3>
+      <p>${props.date} ${props.hour}</p>
+     <button id="openSidebarBtn" style="
+     margin-left:25px;
+      width:70%;
+      padding: 8px 12px;
+      background: #0B70D5;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+    ">
+      Zobacz więcej
+    </button>
+    `);
+
+  popup.on("open", () => {
+    const popupEl = popup.getElement();              
+    const btn = popupEl.querySelector("#openSidebarBtn");
+    if (btn) {
+      btn.addEventListener("click", (ev) => {
+        ev.stopPropagation();                      
+        ev.preventDefault();
+        setSelectedEvent(props);
+        console.log("klik");
+        document.body.classList.add("sidebar-open");
+      });
+    }
+
+    const closeBtn = document.getElementById("closeSideBarbtn");
+    if (closeBtn) {
+      closeBtn.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        ev.preventDefault();
+
+        console.log("zamknij");
+        document.body.classList.remove("sidebar-open");
+        setSelectedEvent(null);
+      });
+    }
+  });
+
+  popup.addTo(map.current);
+});
 
         });
- map.current.on("click", 'districts-layer',(e)=> {
-    const { lng, lat } = e.lngLat;
+//  map.current.on("click", 'districts-layer',(e)=> {
+//     const { lng, lat } = e.lngLat;
 
-      const popup = new maptilersdk.Popup()
-        .setLngLat([lng, lat])
-        .setHTML(`<h3>pls dzialaj</h3><p>Lng: ${lng.toFixed(5)}, Lat: ${lat.toFixed(5)}</p>
-      <button id="openSidebarBtn">+</button>`)
+//       const popup = new maptilersdk.Popup()
+//         .setLngLat([lng, lat])
+//         .setHTML(`<h3>pls dzialaj</h3><p>Lng: ${lng.toFixed(5)}, Lat: ${lat.toFixed(5)}</p>
+//       <button id="openSidebarBtn">+</button>`)
 
-      popup.on("open", () => {
+//       popup.on("open", () => {
 
-        const btn = document.getElementById("openSidebarBtn");
-        if (btn) {
-          btn.addEventListener("click", (ev) => {
-            ev.stopPropagation;
-            console.log("klik");
+//         const btn = document.getElementById("openSidebarBtn");
+//         if (btn) {
+//           btn.addEventListener("click", (ev) => {
+//             ev.stopPropagation;
+//             console.log("klik");
 
-            document.body.classList.add("sidebar-open");
-          });
-        }
+//             document.body.classList.add("sidebar-open");
+//           });
+//         }
 
-        const closeBtn = document.getElementById("closeSideBarbtn");
-        if (closeBtn) {
-          closeBtn.addEventListener("click", (ev) => {
-            ev.stopPropagation;
-            console.log("klik");
+//         const closeBtn = document.getElementById("closeSideBarbtn");
+//         if (closeBtn) {
+//           closeBtn.addEventListener("click", (ev) => {
+//             ev.stopPropagation;
+//             console.log("klik");
 
-            document.body.classList.remove("sidebar-open");
-          });
-        }
+//             document.body.classList.remove("sidebar-open");
+//           });
+//         }
 
-      });
-      popup.addTo(map.current);
-    });
+//       });
+//       popup.addTo(map.current);
+//     });
   }, [gdansk.lng, gdansk.lat, zoom]);
 
 useEffect(() => {
@@ -337,20 +391,8 @@ useEffect(() => {
       id === activeLayer ? 'visible' : 'none'
     );
   });
-map.current.on("click", 'events',(e) => {
-  const props=e.features[0].properties;
-    new maptilersdk.Popup()
-    .setLngLat(e.lngLat)
-    .setHTML(`
-      <h3>${props.name}</h3>
-      <p>${props.date} ${props.hour}</p>
-      <p>${props.place_name}, ${props.street}, ${props.city}</p>
-      ${props.image ? `<img src="${props.image}" style="max-width:150px" />` : ''}
-      
-    `)
-    .addTo(map.current);
 
-});
+
   // if (map.current.getLayer('district-borders')) {
   //   const districtsVisibility = map.current.getLayoutProperty('districts-layer', 'visibility');
   //   map.current.setLayoutProperty(
@@ -400,16 +442,58 @@ map.current.on("click", 'events',(e) => {
 
 
       <div ref={mapContainer} className="map" />
-
-      <div className="sidebar">
-        <OpinionForm />
-        <button id="closeSideBarbtn">-</button>
+    <div className="sidebar">
+  {selectedEvent ? (
+    <div className="event-card">
+      <div className="event-header">
+        <h2>{selectedEvent.name}</h2>
+        <p className="event-datetime">
+          <span>{selectedEvent.date}</span>
+          <span>{selectedEvent.hour}</span>
+        </p>
       </div>
+
+      {selectedEvent.image && (
+        <img
+          className="event-image"
+          src={selectedEvent.image}
+          alt={selectedEvent.name}
+        />
+      )}
+
+      <div className="event-info">
+        <p>
+          <strong>Miejsce:</strong><br />
+          {selectedEvent.place_name}<br />
+          {selectedEvent.street}<br />
+          {selectedEvent.city}
+        </p>
+      </div>
+
       
-      <div className="sidebar-reports">
+    </div>
+  ) : (
+    <OpinionForm />
+  )}
+
+  <button
+    id="closeSideBarbtn"
+    className="close-sidebar-btn"
+    onClick={(e) => {
+      e.preventDefault();
+      document.body.classList.remove("sidebar-open");
+      setSelectedEvent(null);
+    }}
+  >
+    X
+  </button>
+</div>
+<div className="sidebar-reports">
         <ReportsList lng={report_lng} lat={report_lat} />
         <button id="closeSideBarReportsbtn">-</button>
       </div>
+
+      
     </div>
   );
 }
