@@ -45,18 +45,27 @@ body.sidebar-reports-open .sidebar-reports {
   right: 0;
 }
 
+.sidenav {
+  position: fixed;
+  top: 50px;
+  left: 0;
+  z-index: 10000;
+}
+
 .sidenav a {
-  left: -130px;
-  transition: 0.3s;
+  position: fixed;
+  left: -160px;
   padding: 15px;
-  width: 130px;
+  width: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: white;
   text-decoration: none;
   font-size: 20px;
-  color: white;
   border-radius: 0 5px 5px 0;
-   position: fixed;    
-  top: 50px;            
-  z-index: 10000;   
+  transition: left 0.3s ease;
 }
 
 .sidenav a:hover {
@@ -64,100 +73,23 @@ body.sidebar-reports-open .sidebar-reports {
 }
 
 #demografia {
-  font-size: 20px;
-  top: 20px;
+  bottom: 170px;
   background-color: #77B8F8;
 }
 
 #wydarzenia {
-  font-size: 20px;
-  top: 80px;
+  bottom: 110px;
   background-color: #1685F3;
 }
 
 #zgloszenia {
-  font-size: 20px;
-  top: 140px;
-  background-color: #0B70D5;
+  bottom: 50px;
+  background-color: #063d74;
+}
+
+.sidenav img {
+  width: 24px;
+  height: 24px;
 }
 
 
-.event-card {
-  position: absolute;
-  top: 70px;
-  right: 15px;
-  width: 80%;
-  height: 55%;
-  flex-direction: column;
-  gap: 15px;
-  background: #ffffff;
-  padding: 10px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  animation: fadeIn 0.2s ease-out;
-}
-
-.event-header h2 {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 600;
-  color: #0B70D5;
-}
-
-.event-datetime {
-  display: flex;
-  justify-content: space-between;
-  font-size: 14px;
-  color: #666;
-}
-
-.event-image {
-  width: 100%;
-  border-radius: 10px;
-  object-fit: cover;
-  max-height: 160px;
-  box-shadow: 0 1px 5px rgba(0,0,0,0.15);
-}
-
-.event-info {
-  font-size: 14px;
-  color: #333;
-  line-height: 1.5;
-  background: #f8f9fc;
-  padding: 10px;
-  border-radius: 10px;
-}
-
-.event-info strong {
-  color: #0B70D5;
-}
-
-
-
-.event-link:hover {
-  background: #d8e8ff;
-}
-
-.close-sidebar-btn {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  width: 36px;
-  height: 36px;
-
-  border: none;
-  border-radius: 50%;
-  background: #0B70D5;
-  color: white;
-  font-size: 20px;
-  font-weight: bold;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.2);
-  z-index: 10000;
-}
