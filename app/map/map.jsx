@@ -376,6 +376,8 @@ export default function Map() {
 
   }, [activeLayer]);
 
+  const lastReportCoords = reportCoords[reportCoords.length - 1];
+
   return (
     <div className="map-wrap">
       <div id="mySidenav" className="sidenav">
