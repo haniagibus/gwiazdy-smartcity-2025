@@ -556,6 +556,61 @@ export default function Map() {
 
     });
 
+    map.current.on('load', async () => {
+      const image = await map.current.loadImage("/roby.png");
+      map.current.addImage('points', image.data);
+      fetch('/points.csv')
+        .then((res) => res.text())
+        .then((text) => {
+          const lines = text.trim().split('\n');
+
+          const header = lines[0].split(',').map(h => h.trim());
+
+          const features = lines.slice(1).map((line) => {
+            const cols = line.split(',').map(c => c.trim());
+            const obj = {};
+
+            header.forEach((h, i) => {
+              obj[h] = cols[i];
+            });
+
+            const lat = parseFloat(obj.lat);
+            const lon = parseFloat(obj.lon);
+
+            return {
+              type: 'Feature',
+              geometry: {
+                type: 'Point',
+                coordinates: [lon, lat],
+              },
+              properties: obj,
+            };
+          });
+
+          const geojson = {
+            type: 'FeatureCollection',
+            features,
+          };
+          console.log(geojson);
+
+          map.current.addSource('points', {
+            type: 'geojson',
+            data: geojson,
+          });
+
+          map.current.addLayer({
+            id: 'points',
+            type: 'symbol',
+            source: 'points',
+            layout: {
+              visibility: activeLayer === 'points' ? 'visible' : 'none',
+              'icon-image': 'points',
+              'icon-size': 1
+            },
+          });
+        });
+
+    });
     // map.current.on("click", 'events', (e) => {
     //   const props = e.features[0].properties;
     //   new maptilersdk.Popup()
@@ -606,6 +661,18 @@ export default function Map() {
 
     });
 
+     map.current.on("click", 'points', (e) => {
+      const props = e.features[0].properties;
+      new maptilersdk.Popup()
+        .setLngLat(e.lngLat)
+        .setHTML(`
+      <h4 style="text-align: center;">❤️‍🔥 bad vibes ❤️‍🔥</h4>
+      
+    `)
+        .addTo(map.current);
+
+    });
+
     if (map.current.getLayer('hospitals')) {
       const districtsVisibility = map.current.getLayoutProperty('events', 'visibility');
       map.current.setLayoutProperty(
@@ -626,6 +693,14 @@ export default function Map() {
       const districtsVisibility = map.current.getLayoutProperty('events', 'visibility');
       map.current.setLayoutProperty(
         'uni',
+        'visibility',
+        districtsVisibility || 'none'
+      );
+    }
+    if (map.current.getLayer('points')) {
+      const districtsVisibility = map.current.getLayoutProperty('events', 'visibility');
+      map.current.setLayoutProperty(
+        'points',
         'visibility',
         districtsVisibility || 'none'
       );
