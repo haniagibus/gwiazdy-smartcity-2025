@@ -98,7 +98,7 @@ export default function Map() {
           'fill-opacity': [
             'case',
             ['boolean', ['feature-state', 'hover'], false],
-            1,
+            0.9,
             0.6
           ]
         }
@@ -117,7 +117,7 @@ export default function Map() {
       });
 
       map.current.addLayer({
-        id: 'districts-fills',
+        id: 'district-fills',
         type: 'fill',
         source: 'districts',
         layout: {},
@@ -128,42 +128,21 @@ export default function Map() {
       });
 
 
-      // map.current.on('mousemove', 'districts-layer', e => {
-      //   if (!e.features || !e.features.length) return;
-
-      //   if (hoveredDistrictId !== null) {
-      //     map.current.setFeatureState(
-      //       { source: 'districts', id: hoveredDistrictId },
-      //       { hover: false }
-      //     );
-      //   }
-
-      //   hoveredDistrictId = e.features[0].id;
-      //   map.current.setFeatureState(
-      //     { source: 'districts', id: hoveredDistrictId },
-      //     { hover: true }
-      //   );
+      // const geocoder = new GeocodingControl({
+      //   //bbox: [18.31, 54.29, 18.87, 54.45]
       // });
 
-      // // When the user moves their mouse over the state-fill layer, we'll update the
-      // // feature state for the feature under the mouse.
-      // map.current.on('mousemove', 'districts-layer', function (e) {
-      //   if (e.features.length > 0) {
-      //     if (hoveredDistrictId) {
-      //       map.current.setFeatureState(
-      //         { source: 'districts', id: hoveredDistrictId },
-      //         { hover: false }
-      //       );
-      //     }
-      //     hoveredDistrictId = e.features[0].id;
-      //     map.current.setFeatureState(
-      //       { source: 'districts', id: hoveredDistrictId },
-      //       { hover: false }
-      //     );
-      //   }
-      //   hoveredDistrictId = null;
-      //   map.current.getCanvas().style.cursor = '';
-      // });
+      map.current.addLayer({
+        id: 'districts-fills',
+        type: 'fill',
+        source: 'districts',
+        layout: {},
+        paint: {
+          'fill-color': '#08519c',
+          'fill-opacity': 0.1
+        }
+      });
+
 
       // When the user moves their mouse over the state-fill layer, we'll update the
       // feature state for the feature under the mouse.
