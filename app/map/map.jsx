@@ -7,14 +7,40 @@ import './map.css';
 import configData from '../config/config';
 import OpinionForm from '../components/opinion_form.js';
 import OpinionsList from '../components/opinions_list.js';
-import { GeocodingControl } from '@maptiler/geocoding-control/maptilersdk';
-import '@maptiler/geocoding-control/style.css';
 import { getReportsFromDatabase } from '../services/action.js';
+import Slider from 'rc-slider';
+import 'rc-slider/assets/index.css';
 
 const ReportsList = lazy(() => import('../components/reports_list.js'));
 
 const LAYERS = ['districts-layer', 'reports-layer', 'events'];
-
+const BAD_VIBES_MESSAGES = [
+  "Obszar o ograniczonej dostępności transportu publicznego <br> Zalecane jest dodanie nowego przystanku komunikacji publicznej w pobliżu.",
+  
+  "Lokalizacja oddalona od podstawowych usług i aktywności miejskich <br> Zalecane jest utworzenie punktu usługowego lub organizacja wydarzeń w tej okolicy.",
+  
+  "Mniejsze możliwości uczestnictwa mieszkańców w życiu społecznym <br> Zaleca się wprowadzenie programów animacji lokalnej oraz wydarzeń sąsiedzkich.",
+  
+  "Strefa potencjalnego wykluczenia przestrzennego - niska dostępność infrastruktury <br> Zalecane jest uzupełnienie infrastruktury pieszej i rowerowej, aby poprawić dostępność.",
+  
+  "Lokalizacja ze zwiększonym ryzykiem izolacji społecznej <br> Zaleca się utworzenie miejsc spotkań społeczności lokalnej lub centrum sąsiedzkiego.",
+  
+  "Niewystarczająca liczba usług i wydarzeń w zasięgu dojścia pieszego <br> Rekomenduje się wdrożenie mobilnych usług miejskich lub cyklicznych wydarzeń plenerowych.",
+  
+  "Miejsce o ograniczonym dostępie do oferty kulturalnej i rekreacyjnej <br> Zaleca się stworzenie przestrzeni rekreacyjnych, takich jak skwer lub plac aktywności.",
+  
+  "Strefa o najniższym poziomie aktywności społecznej w swoim otoczeniu <br> Rekomenduje się działania integracyjne oraz wprowadzenie nowych atrakcji miejskich.",
+  
+  "Znaczna odległość od przystanków może wpływać na mobilność mieszkańców <br> Zalecane jest usprawnienie tras komunikacji publicznej lub stworzenie nowego połączenia.",
+  
+  "Teren wymagający działań poprawiających integrację i aktywizację lokalną <br> Rekomenduje się utworzenie ogrodu społecznego lub przestrzeni sąsiedzkiej.",
+  
+  "Niski poziom zagospodarowania sprzyjający poczuciu izolacji <br> Zaleca się dodanie małej architektury, oświetlenia oraz elementów poprawiających estetykę przestrzeni.",
+  
+  "Obszar sugerujący potrzebę rozwoju usług publicznych lub społecznych <br> Rekomenduje się analizę potrzeb mieszkańców i wdrożenie brakujących usług.",
+  
+  "Miejsce o ograniczonych możliwościach nawiązywania kontaktów sąsiedzkich <br> Zaleca się organizowanie wydarzeń sprzyjających integracji oraz tworzenie miejsc spotkań."
+];
 export default function Map() {
   const mapContainer = useRef(null);
   const map = useRef(null);
@@ -22,6 +48,10 @@ export default function Map() {
   const [activeLayer, setActiveLayer] = useState('districts-layer');
   const [reportCoords, setReportCoords] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [eventsList, setEventsList] = useState([]);
+const [eventQuery, setEventQuery] = useState('');
+const [forecastYear, setForecastYear] = useState(2025);
+
 
   const gdansk = { lng: 18.638306, lat: 54.372158 };
   const zoom = 11;
@@ -57,8 +87,6 @@ export default function Map() {
       //   data: reports_dataset
       // });
 
-      const geocoder = new GeocodingControl({});
-      map.current.addControl(geocoder, "top-left");
 
       map.current.addLayer({
         id: 'districts-layer',
@@ -288,6 +316,16 @@ export default function Map() {
               properties: obj,
             };
           });
+          setEventsList(
+  features.map((f, index) => ({
+    id: f.properties.id || `${f.properties.name}-${index}`,
+    name: f.properties.name,
+    date: f.properties.date,
+    hour: f.properties.hour,
+    coords: f.geometry.coordinates,
+    properties: f.properties,
+  }))
+);
 
           const geojson = {
             type: 'FeatureCollection',
@@ -367,6 +405,34 @@ export default function Map() {
 
     });
   }, [gdansk.lng, gdansk.lat, zoom]);
+useEffect(() => {
+  if (!map.current) return;
+
+  const handlePointsClick = (e) => {
+    if (!e.features?.length) return;
+
+    const randomMsg =
+      BAD_VIBES_MESSAGES[
+        Math.floor(Math.random() * BAD_VIBES_MESSAGES.length)
+      ];
+
+    new maptilersdk.Popup()
+      .setLngLat(e.lngLat)
+      .setHTML(`
+        <h4 style="text-align: center;">UWAGA!</h4>
+        <p style="margin-top:8px; text-align:center;">${randomMsg}</p>
+      `)
+      .addTo(map.current);
+  };
+
+  map.current.on("click", "points", handlePointsClick);
+
+  
+  return () => {
+    if (!map.current) return;
+    map.current.off("click", "points", handlePointsClick);
+  };
+}, []); 
 
   useEffect(() => {
     if (!map.current) return;
@@ -557,6 +623,61 @@ export default function Map() {
 
     });
 
+    map.current.on('load', async () => {
+      const image = await map.current.loadImage("/roby.png");
+      map.current.addImage('points', image.data);
+      fetch('/points.csv')
+        .then((res) => res.text())
+        .then((text) => {
+          const lines = text.trim().split('\n');
+
+          const header = lines[0].split(',').map(h => h.trim());
+
+          const features = lines.slice(1).map((line) => {
+            const cols = line.split(',').map(c => c.trim());
+            const obj = {};
+
+            header.forEach((h, i) => {
+              obj[h] = cols[i];
+            });
+
+            const lat = parseFloat(obj.lat);
+            const lon = parseFloat(obj.lon);
+
+            return {
+              type: 'Feature',
+              geometry: {
+                type: 'Point',
+                coordinates: [lon, lat],
+              },
+              properties: obj,
+            };
+          });
+
+          const geojson = {
+            type: 'FeatureCollection',
+            features,
+          };
+          console.log(geojson);
+
+          map.current.addSource('points', {
+            type: 'geojson',
+            data: geojson,
+          });
+
+          map.current.addLayer({
+            id: 'points',
+            type: 'symbol',
+            source: 'points',
+            layout: {
+              visibility: activeLayer === 'points' ? 'visible' : 'none',
+              'icon-image': 'points',
+              'icon-size': 1
+            },
+          });
+        });
+
+    });
     // map.current.on("click", 'events', (e) => {
     //   const props = e.features[0].properties;
     //   new maptilersdk.Popup()
@@ -607,6 +728,10 @@ export default function Map() {
 
     });
 
+
+
+
+
     if (map.current.getLayer('hospitals')) {
       const districtsVisibility = map.current.getLayoutProperty('events', 'visibility');
       map.current.setLayoutProperty(
@@ -627,6 +752,14 @@ export default function Map() {
       const districtsVisibility = map.current.getLayoutProperty('events', 'visibility');
       map.current.setLayoutProperty(
         'uni',
+        'visibility',
+        districtsVisibility || 'none'
+      );
+    }
+    if (map.current.getLayer('points')) {
+      const districtsVisibility = map.current.getLayoutProperty('events', 'visibility');
+      map.current.setLayoutProperty(
+        'points',
         'visibility',
         districtsVisibility || 'none'
       );
@@ -668,10 +801,144 @@ export default function Map() {
 
   }, [activeLayer]);
 
+useEffect(() => {
+  if (!map.current) return;
+
+  const factor = 1 + (forecastYear - 2025) * 0.2;
+
+  const fillColorExpression = [
+    'let',
+    'density',
+    ['*', ['get', 'GEST_ZAL'], factor],
+    [
+      'interpolate',
+      ['linear'],
+      ['zoom'],
+      8,
+      [
+        'interpolate',
+        ['linear'],
+        ['var', 'density'],
+        274,
+        ['to-color', '#edf8e9'],
+        1551,
+        ['to-color', '#006d2c']
+      ],
+      10,
+      [
+        'interpolate',
+        ['linear'],
+        ['var', 'density'],
+        274,
+        ['to-color', '#eff3ff'],
+        1551,
+        ['to-color', '#08519c']
+      ]
+    ]
+  ];
+
+  if (map.current.getLayer('districts-layer')) {
+    map.current.setPaintProperty(
+      'districts-layer',
+      'fill-color',
+      fillColorExpression
+    );
+  }
+}, [forecastYear]);
+
+
   const lastReportCoords = reportCoords[reportCoords.length - 1];
+  const handleSelectEvent = (eventItem) => {
+  if (!map.current) return;
+
+  map.current.flyTo({
+    center: eventItem.coords,
+    zoom: 15,
+  });
+
+  setSelectedEvent(eventItem.properties);
+  document.body.classList.add('sidebar-open');
+
+  const [lng, lat] = eventItem.coords;
+  const popup = new maptilersdk.Popup()
+    .setLngLat([lng, lat])
+    .setHTML(`
+      <h3>${eventItem.properties.name}</h3>
+      <p>${eventItem.properties.date} ${eventItem.properties.hour}</p>
+    `);
+
+  popup.addTo(map.current);
+
+  setActiveLayer('events');
+  setEventQuery('');
+
+};
+
 
   return (
     <div className="map-wrap">
+      {activeLayer === 'districts-layer' && (
+  <div className="forecast-slider">
+    <label>
+      Prognoza na rok: <strong>{forecastYear}</strong>
+    </label>
+    <Slider
+      min={2025}
+      max={2032}
+      value={forecastYear}
+      onChange={(value) => setForecastYear(value)}
+      step={1}
+    />
+  </div>
+)}
+
+      <div className="event-search">
+  <input
+    type="text"
+    placeholder="Szukaj wydarzenia..."
+    value={eventQuery}
+    onChange={(e) => setEventQuery(e.target.value)}
+  />
+
+  {eventQuery && (
+    <ul className="event-search-results">
+      {eventsList
+        .filter((ev) => {
+          const q = eventQuery.toLowerCase();
+          return (
+            (ev.name && ev.name.toLowerCase().includes(q)) ||
+            (ev.date && ev.date.toLowerCase().includes(q)) ||
+            (ev.hour && ev.hour.toLowerCase().includes(q))
+          );
+        })
+        .slice(0, 10) 
+        .map((ev) => (
+          <li
+            key={ev.id}
+            onClick={() => handleSelectEvent(ev)}
+          >
+            <strong>{ev.name}</strong>
+            <br />
+            <span>
+              {ev.date} {ev.hour}
+            </span>
+          </li>
+        ))}
+
+      {eventsList.filter((ev) => {
+        const q = eventQuery.toLowerCase();
+        return (
+          (ev.name && ev.name.toLowerCase().includes(q)) ||
+          (ev.date && ev.date.toLowerCase().includes(q)) ||
+          (ev.hour && ev.hour.toLowerCase().includes(q))
+        );
+      }).length === 0 && (
+        <li>Brak wyników</li>
+      )}
+    </ul>
+  )}
+</div>
+
       <div id="mySidenav" className="sidenav">
         <a
           href="#"
@@ -710,7 +977,10 @@ export default function Map() {
         </a>
       </div>
 
-      <div ref={mapContainer} className="map" />
+      <div
+  ref={mapContainer}
+  className={`map ${forecastYear !== 2025 ? 'map-disabled' : ''}`}
+/>
       <div className="sidebar">
         {selectedEvent ? (
           <div className="event-card">
@@ -776,3 +1046,5 @@ export default function Map() {
 
   );
 }
+
+
