@@ -7,7 +7,11 @@ Content-Type: application/json
 Accept: applictaion/json
 
 {
-  "id_object":2,
+  "added_date": "2003-11-28T12:14:20.263Z",
+  "desc":"super",
   "name": "michella",
-  "added_date": "2003-11-28T12:14:20.263Z"
+  "rating":5,
+  "x_coord":54.3807195,
+  "y_coord":18.5888897
+
 }

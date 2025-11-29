@@ -3,13 +3,16 @@
 export const saveOpinionToDatabase = async (formData) => {
   const nick = formData.get("nick");
   const desc = formData.get("desc");
+  const x = formData.get("x_coord");
+  const y = formData.get("y_coord");
   const rating = Number(formData.get("rating"));
 
   const res = await fetch("http://localhost:3000/api/opinion", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      id_object: 1,
+      x_coord:Number(x),
+      y_coord:Number(y),
       name: nick,
       desc: desc,
       rating: rating,
@@ -23,16 +26,22 @@ export const saveOpinionToDatabase = async (formData) => {
   return result;
 };
 
-export const getOpinionsFromDatabase = async () => {
-  const res = await fetch("http://localhost:3000/api/opinion", {
-    method: "GET",
-    cache: "no-store",
-  });
+export const getOpinionsFromDatabase = async (lon, lat) => {
+  const res = await fetch(
+    `http://localhost:3000/api/opinion?lat=${encodeURIComponent(
+      lat
+    )}&lon=${encodeURIComponent(lon)}`,
+    {
+      method: 'GET',
+      cache: 'no-store',
+    }
+  );
 
-  if (!res.ok) throw new Error("Failed to fetch opinions");
+  if (!res.ok) throw new Error('Failed to fetch opinions');
 
   return await res.json();
 };
+
 
 export const saveReportToDatabase = async (formData) => {
   const nick = formData.get("nick");

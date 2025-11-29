@@ -18,7 +18,8 @@ model Report {
 
 model Opinion {
   id         Int      @id @default(autoincrement())
-  id_object  Int
+  x_coord Float
+  y_coord  Float
   name       String
   desc       String
   rating     Int

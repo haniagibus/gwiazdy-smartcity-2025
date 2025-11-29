@@ -164,13 +164,13 @@ export default function Map() {
 
       map.current.on('mouseleave', 'districts-layer', function () {
         if (hoveredDistrictId) {
-            map.current.setFeatureState(
-                { source: 'districts', id: hoveredDistrictId },
-                { hover: false }
-            );
+          map.current.setFeatureState(
+            { source: 'districts', id: hoveredDistrictId },
+            { hover: false }
+          );
         }
         hoveredDistrictId = null;
-    });
+      });
 
       map.current.on('click', 'districts-layer', e => {
         const f = e.features && e.features[0];
@@ -738,6 +738,10 @@ export default function Map() {
               </p>
             </div>
 
+            <OpinionsList
+              lat={parseFloat(selectedEvent.lat)}
+              lon={parseFloat(selectedEvent.lon)}
+            />
 
           </div>
         ) : (
