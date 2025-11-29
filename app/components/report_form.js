@@ -2,11 +2,12 @@ import React, { useState } from "react";
 import { Rating } from "react-simple-star-rating";
 import {saveReportToDatabase} from "../services/action.js"
 
-const ReportForm = () => {
+const ReportForm = ({ lng, lat }) => {
     const [formData, setFormData] = useState({
+        x_coord: lng,
+        y_coord: lat,
         nick: "",
         desc: "",
-        rating: 0,
     });
 
     const handleChange = (e) => {
@@ -16,9 +17,10 @@ const ReportForm = () => {
 
     const handleReset = () => {
     setFormData({
+        x_coord: 0,
+        y_coord: 0,
         nick: "",
         desc: "",
-        rating: 0,
     });
     };
 
@@ -30,9 +32,10 @@ const ReportForm = () => {
         await saveReportToDatabase(data);
 
         setFormData({
+            x_coord: lng,
+            y_coord: lat,
             nick: "",
             desc: "",
-            rating: 0,
         });
     }; 
 
@@ -60,6 +63,9 @@ const ReportForm = () => {
         onChange={handleChange}
         className="textarea"
     />
+
+    <input type="hidden" name="x_coord" value={lng} />
+    <input type="hidden" name="y_coord" value={lat} />
 
     <button type="submit" className="button">
         Submit

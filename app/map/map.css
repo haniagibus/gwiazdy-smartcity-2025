@@ -28,6 +28,22 @@ body.sidebar-open .sidebar {
   right: 0;
 }
 
+.sidebar-reports {
+  position: fixed;
+  top: 0;
+  right: -400px;
+  width: 300px;
+  height: 100%;
+  background: white;
+  box-shadow: -4px 0 10px rgba(0,0,0,0.2);
+  transition: right 0.3s ease;
+  z-index: 9999;
+  padding: 20px;
+}
+
+body.sidebar-reports-open .sidebar-reports {
+  right: 0;
+}
 
 .sidenav a {
   left: -130px;

@@ -9,7 +9,9 @@ datasource db {
 
 model Report {
   id         Int      @id @default(autoincrement())
-  id_object  Int
+  x_coord Float
+  y_coord Float
+  desc       String
   name       String
   added_date DateTime
 }
