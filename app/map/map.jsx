@@ -1028,7 +1028,7 @@ useEffect(() => {
             setSelectedEvent(null);
           }}
         >
-          X
+          -
         </button>
       </div>
       <div className="sidebar-reports">

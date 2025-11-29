@@ -7,15 +7,15 @@ const OpinionsList = ({ lon, lat }) => {
   const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
-  if (lon == null || lat == null) return;
+    if (lon == null || lat == null) return;
 
-  const fetchOpinions = async () => {
-    const data = await getOpinionsFromDatabase(lon, lat);
-    setOpinions(data);
-  };
+    const fetchOpinions = async () => {
+      const data = await getOpinionsFromDatabase(lon, lat);
+      setOpinions(data);
+    };
 
-  fetchOpinions();
-}, [lon, lat]);
+    fetchOpinions();
+  }, [lon, lat]);
 
 
   return (
@@ -32,12 +32,18 @@ const OpinionsList = ({ lon, lat }) => {
         </div>
       )}
 
-      <ul>
+      <ul style={{ listStyle: "none", padding: 0 }}>
         {opinions.map((item, index) => (
-          <li key={index}>{JSON.stringify(item)}</li>
+          <li key={index} className="opinion-item">
+            <p><strong>Nick:</strong> {item.name}</p>
+            <p><strong>Dodano:</strong> {new Date(item.added_date).toLocaleString()}</p>
+            <p><strong>Ocena:</strong> {item.rating ? item.rating : "brak"}</p>
+            <p><strong>Opinia:</strong> {item.desc}</p>
+          </li>
         ))}
       </ul>
     </div>
+
   );
 };
 
