@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useRef, useEffect,useState } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import * as maptilersdk from '@maptiler/sdk';
 import "@maptiler/sdk/dist/maptiler-sdk.css";
 import './map.css';
@@ -15,8 +15,8 @@ const LAYERS = ['districts-layer','events'];
 export default function Map() {
   const mapContainer = useRef(null);
   const map = useRef(null);
-  const [activeLayer, setActiveLayer] = useState('districts-layer'); 
-  
+  const [activeLayer, setActiveLayer] = useState('districts-layer');
+
   const gdansk = { lng: 18.638306, lat: 54.372158 };
   const zoom = 11;
   const demography_dataset_id = configData.MAPTILER_DATSET_ID;
@@ -25,13 +25,14 @@ export default function Map() {
   let hoveredDistrictId = null;
 
   useEffect(() => {
-    if (map.current) return; 
+    if (map.current) return;
 
     map.current = new maptilersdk.Map({
       container: mapContainer.current,
       style: maptilersdk.MapStyle.STREETS,
       center: [gdansk.lng, gdansk.lat],
-      zoom: zoom
+      zoom: zoom,
+      fullscreenControl: true
     });
 
     map.current.on("load", async () => {
@@ -49,13 +50,52 @@ export default function Map() {
         type: 'fill',
         source: 'districts',
         layout: {},
-        paint: {
-          'fill-color': '#627BC1',
+        // paint: {
+        //   'fill-color': '#627BC1',
+        //   'fill-opacity': [
+        //     'case',
+        //     ['boolean', ['feature-state', 'hover'], false],
+        //     0.6,
+        //     0.2
+        //   ]
+        // }
+        'paint': {
+          'fill-color': [
+            'let',
+            'density',
+            ['get', 'GEST_ZAL'],
+            [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              8,
+              [
+                'interpolate',
+                ['linear'],
+                ['var', 'density'],
+                274,
+                ['to-color', '#edf8e9'],
+                1551,
+                ['to-color', '#006d2c']
+              ],
+              10,
+              [
+                'interpolate',
+                ['linear'],
+                ['var', 'density'],
+                274,
+                ['to-color', '#eff3ff'],
+                1551,
+                ['to-color', '#08519c']
+
+              ]
+            ]
+          ],
           'fill-opacity': [
             'case',
             ['boolean', ['feature-state', 'hover'], false],
-            0.6,
-            0.2
+            1,
+            0.6
           ]
         }
       });
@@ -66,14 +106,15 @@ export default function Map() {
         source: 'districts',
         layout: {},
         paint: {
-          'line-color': '#627BC1',
-          'line-width': 2
+          'line-color': '#08519c',
+          'line-width': 2,
+          'line-opacity': 0.7
         }
       });
      
 
       const geocoder = new GeocodingControl({
-         //bbox: [18.31, 54.29, 18.87, 54.45]
+        //bbox: [18.31, 54.29, 18.87, 54.45]
       });
 
       map.current.addControl(geocoder, "bottom-right");
@@ -96,15 +137,23 @@ export default function Map() {
           );
         }
       });
-      
-      
+
+
 
       // When a click event occurs on a feature in the states layer, open a popup at the
       // location of the click, with description HTML from its properties.
       map.current.on('click', 'districts-layer', function (e) {
+        const description = `
+          <h2 style="text-align: center;">${e.features[0].properties.DZIELNICY}</h2>
+          <p><b>Liczba ludności:</b> ${e.features[0].properties.L_MIESZK} osób</p>
+          <p><b>Powierzchnia:</b> ${e.features[0].properties.POWIERZCHN} km²</p>
+          <p><b>Gęstość zaludnienia:</b> ${e.features[0].properties.GEST_ZAL} osób/km²</p>
+          <p><b>Saldo migracyjne:</b> ${e.features[0].properties.SALDO_MIGR}</p>
+        `;
+
         new maptilersdk.Popup()
           .setLngLat(e.lngLat)
-          .setHTML(e.features[0].properties.DZIELNICY)
+          .setHTML(description)
           .addTo(map.current);
       });
 
@@ -124,7 +173,7 @@ export default function Map() {
         hoveredDistrictId = null;
 
         map.current.getCanvas().style.cursor = '';
-      });      
+      });
     });
      map.current.on('load', async () => {
       const image = await map.current.loadImage("/star.png");
@@ -184,36 +233,36 @@ export default function Map() {
  map.current.on("click", 'districts-layer',(e)=> {
     const { lng, lat } = e.lngLat;
 
-    const popup=new maptilersdk.Popup()
-      .setLngLat([lng, lat])
-      .setHTML(`<h3>pls dzialaj</h3><p>Lng: ${lng.toFixed(5)}, Lat: ${lat.toFixed(5)}</p>
+      const popup = new maptilersdk.Popup()
+        .setLngLat([lng, lat])
+        .setHTML(`<h3>pls dzialaj</h3><p>Lng: ${lng.toFixed(5)}, Lat: ${lat.toFixed(5)}</p>
       <button id="openSidebarBtn">+</button>`)
-    
+
       popup.on("open", () => {
 
-    const btn = document.getElementById("openSidebarBtn");
-    if (btn) {
-      btn.addEventListener("click", (ev) => {
-        ev.stopPropagation;
-        console.log("klik");
+        const btn = document.getElementById("openSidebarBtn");
+        if (btn) {
+          btn.addEventListener("click", (ev) => {
+            ev.stopPropagation;
+            console.log("klik");
 
-        document.body.classList.add("sidebar-open"); 
+            document.body.classList.add("sidebar-open");
+          });
+        }
+
+        const closeBtn = document.getElementById("closeSideBarbtn");
+        if (closeBtn) {
+          closeBtn.addEventListener("click", (ev) => {
+            ev.stopPropagation;
+            console.log("klik");
+
+            document.body.classList.remove("sidebar-open");
+          });
+        }
+
       });
-    }
-
-    const closeBtn = document.getElementById("closeSideBarbtn");
-    if (closeBtn) {
-      closeBtn.addEventListener("click", (ev) => {
-        ev.stopPropagation;
-        console.log("klik");
-
-        document.body.classList.remove("sidebar-open"); 
-      });
-    }
-    
-  });
-  popup.addTo(map.current);
-  });
+      popup.addTo(map.current);
+    });
   }, [gdansk.lng, gdansk.lat, zoom]);
 
 useEffect(() => {
@@ -292,10 +341,10 @@ map.current.on("click", 'events',(e) => {
 
       <div ref={mapContainer} className="map" />
       <div className="sidebar">
-        <OpinionForm/>
+        <OpinionForm />
         <button id="closeSideBarbtn">-</button>
       </div>
     </div>
   );
 }
-     
+
