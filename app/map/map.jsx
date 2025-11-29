@@ -6,11 +6,12 @@ import "@maptiler/sdk/dist/maptiler-sdk.css";
 import './map.css';
 import configData from '../config/config.ts';
 import OpinionForm from "../components/opinion_form";
+import ReportsList from "../components/reports_list";
 import '@maptiler/sdk/dist/maptiler-sdk.css';
 import { GeocodingControl } from '@maptiler/geocoding-control/maptilersdk';
 import '@maptiler/geocoding-control/style.css';
 
-const LAYERS = ['districts-layer','events'];
+const LAYERS = ['districts-layer', 'reports', 'events'];
 
 export default function Map() {
   const mapContainer = useRef(null);
@@ -20,10 +21,15 @@ export default function Map() {
 
   const gdansk = { lng: 18.638306, lat: 54.372158 };
   const zoom = 11;
-  const demography_dataset_id = configData.MAPTILER_DATSET_ID;
+  const demography_dataset_id = configData.MAPTILER_DATSET_DISTRICTS_ID;
+  const reports_dataset_id = configData.MAPTILER_DATSET_REPORTS_ID;
+
   maptilersdk.config.apiKey = configData.MAPTILER_API_KEY;
 
   let hoveredDistrictId = null;
+
+  let report_lng = gdansk.lng;
+  let report_lat = gdansk.lat;
 
   useEffect(() => {
     if (map.current) return;
@@ -38,12 +44,25 @@ export default function Map() {
 
     map.current.on("load", async () => {
       const demography_dataset = await maptilersdk.data.get(demography_dataset_id);
+      const reports_dataset = await maptilersdk.data.get(reports_dataset_id);
 
       map.current.addSource('districts', {
         type: 'geojson',
         data: demography_dataset
       });
 
+      map.current.addSource('reports', {
+        type: 'geojson',
+        data: reports_dataset
+      });
+
+      const geocoder = new GeocodingControl({
+        //bbox: [18.31, 54.29, 18.87, 54.45]
+      });
+
+      map.current.addControl(geocoder, "bottom-right");
+
+      // [DISTRICTS LAYER]
       // The feature-district dependent fill-opacity expression will render the hover effect
       // when a feature's hover district is set to true.
       map.current.addLayer({
@@ -114,11 +133,20 @@ export default function Map() {
       });
      
 
-      const geocoder = new GeocodingControl({
-        //bbox: [18.31, 54.29, 18.87, 54.45]
-      });
+      // const geocoder = new GeocodingControl({
+      //   //bbox: [18.31, 54.29, 18.87, 54.45]
+      // });
 
-      map.current.addControl(geocoder, "bottom-right");
+      // [REPORTS LAYER]
+      map.current.addLayer({
+        id: 'reports-layer',
+        type: 'fill',
+        source: 'reports',
+        layout: {},
+        paint: {
+          'fill-opacity': 0
+        }
+      });
 
     
       // When the user moves their mouse over the state-fill layer, we'll update the
@@ -175,6 +203,38 @@ export default function Map() {
 
         map.current.getCanvas().style.cursor = '';
       });
+
+      // [REPORTS EVENT HOOKS]
+      map.current.on('mouseenter', 'reports-layer', function () {
+        map.current.getCanvas().style.cursor = 'pointer';
+      });
+
+      // map.current.on('click', 'reports-layer', function (e) {
+      //   new maptilersdk.Marker()
+      //     .setLngLat(e.lngLat)
+      //     .addTo(map.current);
+      // });
+
+      map.current.on('click', 'reports-layer', function (e) {
+        report_lng = e.lngLat.lng;
+        report_lat = e.lngLat.lat;
+
+        document.body.classList.add("sidebar-reports-open");
+        const closeBtn = document.getElementById("closeSideBarReportsbtn");
+        if (closeBtn) {
+          closeBtn.addEventListener("click", (ev) => {
+            ev.stopPropagation;
+            console.log("klik");
+
+            document.body.classList.remove("sidebar-reports-open");
+          });
+        }
+      });
+    });
+
+    map.current.on("click", 'airports', (e) => {
+      const { lng, lat } = e.lngLat;
+      
     });
      map.current.on('load', async () => {
       const image = await map.current.loadImage("/star.png");
@@ -358,27 +418,27 @@ useEffect(() => {
 
   return (
     <div className="map-wrap">
-    <div id="mySidenav" className="sidenav">
-<a
-  href="#"
-  id="demografia"
-  onClick={(e) => {
-    e.preventDefault();
-    setActiveLayer('districts-layer');
-  }}
->
-   
-    <i>Demografia </i>
-    
-</a>
-  <a href="#" id="wydarzenia" onClick={(e) => {
-    e.preventDefault();
-   setActiveLayer('events');
-  }}><i>Usługi</i></a>
+      <div id="mySidenav" className="sidenav">
+        <a
+          href="#"
+          id="demografia"
+          onClick={(e) => {
+            e.preventDefault();
+            setActiveLayer('districts-layer');
+          }}
+        ><i>Demografia </i>
 
-  <a href="#" id="zgloszenia"><i>Zgłoszenia</i></a>
+        </a>
+        <a href="#" id="wydarzenia" onClick={(e) => {
+          e.preventDefault();
+          setActiveLayer('events');
+        }}><i>Usługi</i></a>
 
-</div>
+        <a href="#" id="zgloszenia" onClick={(e) => {
+          e.preventDefault();
+          setActiveLayer('reports-layer')
+        }}>;<i>Zgłoszenia</i></a>
+      </div>
 
 
       <div ref={mapContainer} className="map" />
@@ -428,7 +488,10 @@ useEffect(() => {
     X
   </button>
 </div>
-
+<div className="sidebar-reports">
+        <ReportsList lng={report_lng} lat={report_lat} />
+        <button id="closeSideBarReportsbtn">-</button>
+      </div>
 
       
     </div>
