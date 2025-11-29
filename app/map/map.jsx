@@ -758,7 +758,7 @@ export default function Map() {
             setSelectedEvent(null);
           }}
         >
-          X
+          -
         </button>
       </div>
       <div className="sidebar-reports">

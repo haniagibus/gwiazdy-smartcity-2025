@@ -41,49 +41,52 @@ const OpinionForm = ({ lng, lat }) => {
     };
 
     return (
-        <form className="form" onSubmit={handleSubmit}>
-            <label htmlFor="nick" className="label">
-                Nick:
-            </label>
-            <input
-                type="text"
-                id="nick"
-                name="nick"
-                value={formData.nick}
-                onChange={handleChange}
-                className="input"
-            />
+        <div className="form-card">
+            <form className="form" onSubmit={handleSubmit}>
+                <label htmlFor="nick" className="label">
+                    Nick:
+                </label>
+                <input
+                    type="text"
+                    id="nick"
+                    name="nick"
+                    value={formData.nick}
+                    onChange={handleChange}
+                    className="input"
+                />
 
-            <label htmlFor="desc" className="label">
-                Description:
-            </label>
-            <textarea
-                id="desc"
-                name="desc"
-                value={formData.desc}
-                onChange={handleChange}
-                className="textarea"
-            />
+                <label htmlFor="desc" className="label">
+                    Opinia:
+                </label>
+                <textarea
+                    id="desc"
+                    name="desc"
+                    value={formData.desc}
+                    onChange={handleChange}
+                    className="textarea"
+                />
 
-            <label className="label">Rating:</label>
-            <Rating
-                onClick={handleRating}
-                initialValue={formData.rating}
-                size={30}
-            />
+                <label className="label">Ocena:</label>
+                <Rating
+                    onClick={handleRating}
+                    initialValue={formData.rating}
+                    size={30}
+                />
 
-            <input type="hidden" name="rating" value={formData.rating} />
-            <input type="hidden" name="x_coord" value={lng} />
-            <input type="hidden" name="y_coord" value={lat} />
+                <input type="hidden" name="rating" value={formData.rating} />
+                <input type="hidden" name="x_coord" value={lng} />
+                <input type="hidden" name="y_coord" value={lat} />
 
-            <button type="submit" className="button">
-                Submit
-            </button>
+                <button type="submit" className="button">
+                    Wyślij
+                </button>
 
-            <button type="reset" className="button" onClick={handleReset}>
-                Reset
-            </button>
-        </form>
+                <button type="reset" className="button" onClick={handleReset}>
+                    Resetuj
+                </button>
+            </form>
+        </div>
+
     );
 };
 
