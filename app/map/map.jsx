@@ -13,7 +13,33 @@ import 'rc-slider/assets/index.css';
 const ReportsList = lazy(() => import('../components/reports_list.js'));
 
 const LAYERS = ['districts-layer', 'reports-layer', 'events'];
-
+const BAD_VIBES_MESSAGES = [
+  "Obszar o ograniczonej dostępności transportu publicznego <br> Zalecane jest dodanie nowego przystanku komunikacji publicznej w pobliżu.",
+  
+  "Lokalizacja oddalona od podstawowych usług i aktywności miejskich <br> Zalecane jest utworzenie punktu usługowego lub organizacja wydarzeń w tej okolicy.",
+  
+  "Mniejsze możliwości uczestnictwa mieszkańców w życiu społecznym <br> Zaleca się wprowadzenie programów animacji lokalnej oraz wydarzeń sąsiedzkich.",
+  
+  "Strefa potencjalnego wykluczenia przestrzennego - niska dostępność infrastruktury <br> Zalecane jest uzupełnienie infrastruktury pieszej i rowerowej, aby poprawić dostępność.",
+  
+  "Lokalizacja ze zwiększonym ryzykiem izolacji społecznej <br> Zaleca się utworzenie miejsc spotkań społeczności lokalnej lub centrum sąsiedzkiego.",
+  
+  "Niewystarczająca liczba usług i wydarzeń w zasięgu dojścia pieszego <br> Rekomenduje się wdrożenie mobilnych usług miejskich lub cyklicznych wydarzeń plenerowych.",
+  
+  "Miejsce o ograniczonym dostępie do oferty kulturalnej i rekreacyjnej <br> Zaleca się stworzenie przestrzeni rekreacyjnych, takich jak skwer lub plac aktywności.",
+  
+  "Strefa o najniższym poziomie aktywności społecznej w swoim otoczeniu <br> Rekomenduje się działania integracyjne oraz wprowadzenie nowych atrakcji miejskich.",
+  
+  "Znaczna odległość od przystanków może wpływać na mobilność mieszkańców <br> Zalecane jest usprawnienie tras komunikacji publicznej lub stworzenie nowego połączenia.",
+  
+  "Teren wymagający działań poprawiających integrację i aktywizację lokalną <br> Rekomenduje się utworzenie ogrodu społecznego lub przestrzeni sąsiedzkiej.",
+  
+  "Niski poziom zagospodarowania sprzyjający poczuciu izolacji <br> Zaleca się dodanie małej architektury, oświetlenia oraz elementów poprawiających estetykę przestrzeni.",
+  
+  "Obszar sugerujący potrzebę rozwoju usług publicznych lub społecznych <br> Rekomenduje się analizę potrzeb mieszkańców i wdrożenie brakujących usług.",
+  
+  "Miejsce o ograniczonych możliwościach nawiązywania kontaktów sąsiedzkich <br> Zaleca się organizowanie wydarzeń sprzyjających integracji oraz tworzenie miejsc spotkań."
+];
 export default function Map() {
   const mapContainer = useRef(null);
   const map = useRef(null);
@@ -378,6 +404,34 @@ const [forecastYear, setForecastYear] = useState(2025);
 
     });
   }, [gdansk.lng, gdansk.lat, zoom]);
+useEffect(() => {
+  if (!map.current) return;
+
+  const handlePointsClick = (e) => {
+    if (!e.features?.length) return;
+
+    const randomMsg =
+      BAD_VIBES_MESSAGES[
+        Math.floor(Math.random() * BAD_VIBES_MESSAGES.length)
+      ];
+
+    new maptilersdk.Popup()
+      .setLngLat(e.lngLat)
+      .setHTML(`
+        <h4 style="text-align: center;">UWAGA!</h4>
+        <p style="margin-top:8px; text-align:center;">${randomMsg}</p>
+      `)
+      .addTo(map.current);
+  };
+
+  map.current.on("click", "points", handlePointsClick);
+
+  
+  return () => {
+    if (!map.current) return;
+    map.current.off("click", "points", handlePointsClick);
+  };
+}, []); 
 
   useEffect(() => {
     if (!map.current) return;
@@ -568,6 +622,61 @@ const [forecastYear, setForecastYear] = useState(2025);
 
     });
 
+    map.current.on('load', async () => {
+      const image = await map.current.loadImage("/roby.png");
+      map.current.addImage('points', image.data);
+      fetch('/points.csv')
+        .then((res) => res.text())
+        .then((text) => {
+          const lines = text.trim().split('\n');
+
+          const header = lines[0].split(',').map(h => h.trim());
+
+          const features = lines.slice(1).map((line) => {
+            const cols = line.split(',').map(c => c.trim());
+            const obj = {};
+
+            header.forEach((h, i) => {
+              obj[h] = cols[i];
+            });
+
+            const lat = parseFloat(obj.lat);
+            const lon = parseFloat(obj.lon);
+
+            return {
+              type: 'Feature',
+              geometry: {
+                type: 'Point',
+                coordinates: [lon, lat],
+              },
+              properties: obj,
+            };
+          });
+
+          const geojson = {
+            type: 'FeatureCollection',
+            features,
+          };
+          console.log(geojson);
+
+          map.current.addSource('points', {
+            type: 'geojson',
+            data: geojson,
+          });
+
+          map.current.addLayer({
+            id: 'points',
+            type: 'symbol',
+            source: 'points',
+            layout: {
+              visibility: activeLayer === 'points' ? 'visible' : 'none',
+              'icon-image': 'points',
+              'icon-size': 1
+            },
+          });
+        });
+
+    });
     // map.current.on("click", 'events', (e) => {
     //   const props = e.features[0].properties;
     //   new maptilersdk.Popup()
@@ -618,6 +727,10 @@ const [forecastYear, setForecastYear] = useState(2025);
 
     });
 
+
+
+
+
     if (map.current.getLayer('hospitals')) {
       const districtsVisibility = map.current.getLayoutProperty('events', 'visibility');
       map.current.setLayoutProperty(
@@ -638,6 +751,14 @@ const [forecastYear, setForecastYear] = useState(2025);
       const districtsVisibility = map.current.getLayoutProperty('events', 'visibility');
       map.current.setLayoutProperty(
         'uni',
+        'visibility',
+        districtsVisibility || 'none'
+      );
+    }
+    if (map.current.getLayer('points')) {
+      const districtsVisibility = map.current.getLayoutProperty('events', 'visibility');
+      map.current.setLayoutProperty(
+        'points',
         'visibility',
         districtsVisibility || 'none'
       );
