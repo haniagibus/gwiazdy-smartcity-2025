@@ -130,66 +130,58 @@ export default function Map() {
       const image = await map.current.loadImage("/star.png");
       map.current.addImage('pinMetro', image.data);
           fetch('/data.csv') 
-            .then((res) => res.text())
-            .then((text) => {
-              const lines = text.trim().split('\n');
-              const header = lines[0].split(',').map(h => h.trim()); 
+  .then((res) => res.text())
+  .then((text) => {
+    const lines = text.trim().split('\n');
 
-              const features = lines.slice(1).map((line) => {
-              const cols = line.split(',').map(c => c.trim());      
-                const obj = {};
-                
-                header.forEach((h, i) => {
-                  obj[h] = cols[i];
-                });
-                
-                return {
-                  type: 'Feature',
-                  geometry: {
-                    type: 'Point',
-                    coordinates: [
-                      parseFloat(obj.lon), 
-                      parseFloat(obj.lat),
-                    ],
-                  },
-                  properties: {
-                    id: obj.id,
-                    name: obj.name,
-                  },
-                  
-                };
-              });
-              
-              const geojson = {
-                type: 'FeatureCollection',
-                features,
-              };
-              console.log(geojson);
-              
+    const header = lines[0].split(',').map(h => h.trim()); 
 
-            
-              map.current.addSource('events', {
-                type: 'geojson',
-                data: geojson,
-              });
+    const features = lines.slice(1).map((line) => {
+      const cols = line.split(',').map(c => c.trim());      
+      const obj={};
+      
+      header.forEach((h, i) => {
+        obj[h] = cols[i];
+      });
 
-              map.current.addLayer({
-                id: 'events',
-                type: 'symbol', 
-                source: 'events',
-                layout:{
-                  visibility:activeLayer==='events'?'visible':'none',
-                  'icon-image': 'pinMetro',
-                  'icon-size': 0.8
+      const lat = parseFloat(obj.lat);
+      const lon = parseFloat(obj.lon);
 
-                },
-                paint: {
-                  
-                },
-              });
-            });
+      return {
+        type: 'Feature',
+        geometry: {
+          type: 'Point',
+          coordinates: [lon, lat],
+        },
+        properties: obj,
+      };
+    });
+    
+    const geojson = {
+      type: 'FeatureCollection',
+      features,
+    };
+    console.log(geojson);
+
+    map.current.addSource('events', {
+      type: 'geojson',
+      data: geojson,
+    });
+
+    map.current.addLayer({
+      id: 'events',
+      type: 'symbol', 
+      source: 'events',
+      layout:{
+        visibility: activeLayer === 'events' ? 'visible' : 'none',
+        'icon-image': 'pinMetro',
+        'icon-size': 0.8
+      },
+    });
+  });
+
         });
- map.current.on("click", (e) => {
+ map.current.on("click", 'districts-layer',(e)=> {
     const { lng, lat } = e.lngLat;
 
     const popup=new maptilersdk.Popup()
@@ -223,6 +215,7 @@ export default function Map() {
   popup.addTo(map.current);
   });
   }, [gdansk.lng, gdansk.lat, zoom]);
+
 useEffect(() => {
   if (!map.current) return;
 
@@ -235,7 +228,20 @@ useEffect(() => {
       id === activeLayer ? 'visible' : 'none'
     );
   });
+map.current.on("click", 'events',(e) => {
+  const props=e.features[0].properties;
+    new maptilersdk.Popup()
+    .setLngLat(e.lngLat)
+    .setHTML(`
+      <h3>${props.name}</h3>
+      <p>${props.date} ${props.hour}</p>
+      <p>${props.place_name}, ${props.street}, ${props.city}</p>
+      ${props.image ? `<img src="${props.image}" style="max-width:150px" />` : ''}
+      
+    `)
+    .addTo(map.current);
 
+});
   // if (map.current.getLayer('district-borders')) {
   //   const districtsVisibility = map.current.getLayoutProperty('districts-layer', 'visibility');
   //   map.current.setLayoutProperty(
