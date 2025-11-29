@@ -6,9 +6,9 @@ import '@maptiler/sdk/dist/maptiler-sdk.css';
 import './map.css';
 import configData from '../config/config';
 import OpinionForm from '../components/opinion_form.js';
-import { GeocodingControl } from '@maptiler/geocoding-control/maptilersdk';
-import '@maptiler/geocoding-control/style.css';
 import { getReportsFromDatabase } from '../services/action.js';
+import Slider from 'rc-slider';
+import 'rc-slider/assets/index.css';
 
 const ReportsList = lazy(() => import('../components/reports_list.js'));
 
@@ -21,6 +21,10 @@ export default function Map() {
   const [activeLayer, setActiveLayer] = useState('districts-layer');
   const [reportCoords, setReportCoords] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [eventsList, setEventsList] = useState([]);
+const [eventQuery, setEventQuery] = useState('');
+const [forecastYear, setForecastYear] = useState(2025);
+
 
   const gdansk = { lng: 18.638306, lat: 54.372158 };
   const zoom = 11;
@@ -56,8 +60,6 @@ export default function Map() {
       //   data: reports_dataset
       // });
 
-      const geocoder = new GeocodingControl({});
-      map.current.addControl(geocoder, "top-left");
 
       map.current.addLayer({
         id: 'districts-layer',
@@ -287,6 +289,16 @@ export default function Map() {
               properties: obj,
             };
           });
+          setEventsList(
+  features.map((f, index) => ({
+    id: f.properties.id || `${f.properties.name}-${index}`,
+    name: f.properties.name,
+    date: f.properties.date,
+    hour: f.properties.hour,
+    coords: f.geometry.coordinates,
+    properties: f.properties,
+  }))
+);
 
           const geojson = {
             type: 'FeatureCollection',
@@ -667,10 +679,144 @@ export default function Map() {
 
   }, [activeLayer]);
 
+useEffect(() => {
+  if (!map.current) return;
+
+  const factor = 1 + (forecastYear - 2025) * 0.2;
+
+  const fillColorExpression = [
+    'let',
+    'density',
+    ['*', ['get', 'GEST_ZAL'], factor],
+    [
+      'interpolate',
+      ['linear'],
+      ['zoom'],
+      8,
+      [
+        'interpolate',
+        ['linear'],
+        ['var', 'density'],
+        274,
+        ['to-color', '#edf8e9'],
+        1551,
+        ['to-color', '#006d2c']
+      ],
+      10,
+      [
+        'interpolate',
+        ['linear'],
+        ['var', 'density'],
+        274,
+        ['to-color', '#eff3ff'],
+        1551,
+        ['to-color', '#08519c']
+      ]
+    ]
+  ];
+
+  if (map.current.getLayer('districts-layer')) {
+    map.current.setPaintProperty(
+      'districts-layer',
+      'fill-color',
+      fillColorExpression
+    );
+  }
+}, [forecastYear]);
+
+
   const lastReportCoords = reportCoords[reportCoords.length - 1];
+  const handleSelectEvent = (eventItem) => {
+  if (!map.current) return;
+
+  map.current.flyTo({
+    center: eventItem.coords,
+    zoom: 15,
+  });
+
+  setSelectedEvent(eventItem.properties);
+  document.body.classList.add('sidebar-open');
+
+  const [lng, lat] = eventItem.coords;
+  const popup = new maptilersdk.Popup()
+    .setLngLat([lng, lat])
+    .setHTML(`
+      <h3>${eventItem.properties.name}</h3>
+      <p>${eventItem.properties.date} ${eventItem.properties.hour}</p>
+    `);
+
+  popup.addTo(map.current);
+
+  setActiveLayer('events');
+  setEventQuery('');
+
+};
+
 
   return (
     <div className="map-wrap">
+      {activeLayer === 'districts-layer' && (
+  <div className="forecast-slider">
+    <label>
+      Prognoza na rok: <strong>{forecastYear}</strong>
+    </label>
+    <Slider
+      min={2025}
+      max={2032}
+      value={forecastYear}
+      onChange={(value) => setForecastYear(value)}
+      step={1}
+    />
+  </div>
+)}
+
+      <div className="event-search">
+  <input
+    type="text"
+    placeholder="Szukaj wydarzenia..."
+    value={eventQuery}
+    onChange={(e) => setEventQuery(e.target.value)}
+  />
+
+  {eventQuery && (
+    <ul className="event-search-results">
+      {eventsList
+        .filter((ev) => {
+          const q = eventQuery.toLowerCase();
+          return (
+            (ev.name && ev.name.toLowerCase().includes(q)) ||
+            (ev.date && ev.date.toLowerCase().includes(q)) ||
+            (ev.hour && ev.hour.toLowerCase().includes(q))
+          );
+        })
+        .slice(0, 10) 
+        .map((ev) => (
+          <li
+            key={ev.id}
+            onClick={() => handleSelectEvent(ev)}
+          >
+            <strong>{ev.name}</strong>
+            <br />
+            <span>
+              {ev.date} {ev.hour}
+            </span>
+          </li>
+        ))}
+
+      {eventsList.filter((ev) => {
+        const q = eventQuery.toLowerCase();
+        return (
+          (ev.name && ev.name.toLowerCase().includes(q)) ||
+          (ev.date && ev.date.toLowerCase().includes(q)) ||
+          (ev.hour && ev.hour.toLowerCase().includes(q))
+        );
+      }).length === 0 && (
+        <li>Brak wyników</li>
+      )}
+    </ul>
+  )}
+</div>
+
       <div id="mySidenav" className="sidenav">
         <a
           href="#"
@@ -709,7 +855,10 @@ export default function Map() {
         </a>
       </div>
 
-      <div ref={mapContainer} className="map" />
+      <div
+  ref={mapContainer}
+  className={`map ${forecastYear !== 2025 ? 'map-disabled' : ''}`}
+/>
       <div className="sidebar">
         {selectedEvent ? (
           <div className="event-card">
@@ -771,3 +920,5 @@ export default function Map() {
 
   );
 }
+
+
