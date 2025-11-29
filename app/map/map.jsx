@@ -6,6 +6,7 @@ import '@maptiler/sdk/dist/maptiler-sdk.css';
 import './map.css';
 import configData from '../config/config';
 import OpinionForm from '../components/opinion_form.js';
+import OpinionsList from '../components/opinions_list.js';
 import { GeocodingControl } from '@maptiler/geocoding-control/maptilersdk';
 import '@maptiler/geocoding-control/style.css';
 import { getReportsFromDatabase } from '../services/action.js';
