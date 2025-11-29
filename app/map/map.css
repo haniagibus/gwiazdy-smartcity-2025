@@ -356,7 +356,7 @@ body.sidebar-reports-open .sidebar-reports {
 .map-disabled {
   pointer-events: none;    
   cursor: not-allowed;    
-
+}
 #closeSideBarbtn:hover {
   background: #e0e0e0;
   transform: scale(1.05);
