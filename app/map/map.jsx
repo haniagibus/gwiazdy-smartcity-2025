@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useRef, useEffect,useState } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import * as maptilersdk from '@maptiler/sdk';
 import "@maptiler/sdk/dist/maptiler-sdk.css";
 import './map.css';
@@ -10,13 +10,13 @@ import '@maptiler/sdk/dist/maptiler-sdk.css';
 import { GeocodingControl } from '@maptiler/geocoding-control/maptilersdk';
 import '@maptiler/geocoding-control/style.css';
 
-const LAYERS = ['districts-layer','airports'];
+const LAYERS = ['districts-layer', 'airports'];
 
 export default function Map() {
   const mapContainer = useRef(null);
   const map = useRef(null);
-  const [activeLayer, setActiveLayer] = useState('districts-layer'); 
-  
+  const [activeLayer, setActiveLayer] = useState('districts-layer');
+
   const gdansk = { lng: 18.638306, lat: 54.372158 };
   const zoom = 11;
   const demography_dataset_id = configData.MAPTILER_DATSET_ID;
@@ -25,7 +25,7 @@ export default function Map() {
   let hoveredDistrictId = null;
 
   useEffect(() => {
-    if (map.current) return; 
+    if (map.current) return;
 
     map.current = new maptilersdk.Map({
       container: mapContainer.current,
@@ -113,27 +113,27 @@ export default function Map() {
       });
 
       const geocoder = new GeocodingControl({
-         //bbox: [18.31, 54.29, 18.87, 54.45]
+        //bbox: [18.31, 54.29, 18.87, 54.45]
       });
 
       map.current.addControl(geocoder, "bottom-right");
 
       map.current.addSource('airports', {
-  type: 'geojson',
-  data: 'https://d2ad6b4ur7yvpq.cloudfront.net/naturalearth-3.3.0/ne_10m_ports.geojson'
-});
-const image = await map.current.loadImage('https://docs.maptiler.com/sdk-js/examples/geojson-point/icon-plane-512.png');
-map.current.addImage('plane', image.data);
-map.current.addLayer({
-  'id': 'airports',
-  'type': 'symbol',
-  'source': 'airports',
-  'layout': {
-    'icon-image': 'plane',
-    'icon-size': ['*', ['get', 'scalerank'] ,0.01]
-  },
-  'paint': {}
-});
+        type: 'geojson',
+        data: 'https://d2ad6b4ur7yvpq.cloudfront.net/naturalearth-3.3.0/ne_10m_ports.geojson'
+      });
+      const image = await map.current.loadImage('https://docs.maptiler.com/sdk-js/examples/geojson-point/icon-plane-512.png');
+      map.current.addImage('plane', image.data);
+      map.current.addLayer({
+        'id': 'airports',
+        'type': 'symbol',
+        'source': 'airports',
+        'layout': {
+          'icon-image': 'plane',
+          'icon-size': ['*', ['get', 'scalerank'], 0.01]
+        },
+        'paint': {}
+      });
       // When the user moves their mouse over the state-fill layer, we'll update the
       // feature state for the feature under the mouse.
       map.current.on('mousemove', 'districts-layer', function (e) {
@@ -151,15 +151,15 @@ map.current.addLayer({
           );
         }
       });
-      
-      
+
+
 
       // When a click event occurs on a feature in the states layer, open a popup at the
       // location of the click, with description HTML from its properties.
       map.current.on('click', 'districts-layer', function (e) {
         const description = `
           <h2 style="text-align: center;">${e.features[0].properties.DZIELNICY}</h2>
-          <p><b>Mieszkańcy:</b> ${e.features[0].properties.L_MIESZK}</p>
+          <p><b>Liczba ludności:</b> ${e.features[0].properties.L_MIESZK} osób</p>
           <p><b>Powierzchnia:</b> ${e.features[0].properties.POWIERZCHN} km²</p>
           <p><b>Gęstość zaludnienia:</b> ${e.features[0].properties.GEST_ZAL} osób/km²</p>
           <p><b>Saldo migracyjne:</b> ${e.features[0].properties.SALDO_MIGR}</p>
@@ -189,95 +189,101 @@ map.current.addLayer({
         map.current.getCanvas().style.cursor = '';
       });
     });
- map.current.on("click", (e) => {
-    const { lng, lat } = e.lngLat;
+    map.current.on("click", (e) => {
+      const { lng, lat } = e.lngLat;
 
-    const popup=new maptilersdk.Popup()
-      .setLngLat([lng, lat])
-      .setHTML(`<h3>pls dzialaj</h3><p>Lng: ${lng.toFixed(5)}, Lat: ${lat.toFixed(5)}</p>
+      const popup = new maptilersdk.Popup()
+        .setLngLat([lng, lat])
+        .setHTML(`<h3>pls dzialaj</h3><p>Lng: ${lng.toFixed(5)}, Lat: ${lat.toFixed(5)}</p>
       <button id="openSidebarBtn">+</button>`)
-    
+
       popup.on("open", () => {
 
-    const btn = document.getElementById("openSidebarBtn");
-    if (btn) {
-      btn.addEventListener("click", (ev) => {
-        ev.stopPropagation;
-        console.log("klik");
+        const btn = document.getElementById("openSidebarBtn");
+        if (btn) {
+          btn.addEventListener("click", (ev) => {
+            ev.stopPropagation;
+            console.log("klik");
 
-        document.body.classList.add("sidebar-open"); 
+            document.body.classList.add("sidebar-open");
+          });
+        }
+
+        const closeBtn = document.getElementById("closeSideBarbtn");
+        if (closeBtn) {
+          closeBtn.addEventListener("click", (ev) => {
+            ev.stopPropagation;
+            console.log("klik");
+
+            document.body.classList.remove("sidebar-open");
+          });
+        }
+
       });
-    }
-
-    const closeBtn = document.getElementById("closeSideBarbtn");
-    if (closeBtn) {
-      closeBtn.addEventListener("click", (ev) => {
-        ev.stopPropagation;
-        console.log("klik");
-
-        document.body.classList.remove("sidebar-open"); 
-      });
-    }
-    
-  });
-  popup.addTo(map.current);
-  });
+      popup.addTo(map.current);
+    });
   }, [gdansk.lng, gdansk.lat, zoom]);
-useEffect(() => {
-  if (!map.current) return;
+  useEffect(() => {
+    if (!map.current) return;
 
-  LAYERS.forEach(id => {
-    if (!map.current.getLayer(id)) return;
+    LAYERS.forEach(id => {
+      if (!map.current.getLayer(id)) return;
 
-    map.current.setLayoutProperty(
-      id,
-      'visibility',
-      id === activeLayer ? 'visible' : 'none'
-    );
-  });
+      map.current.setLayoutProperty(
+        id,
+        'visibility',
+        id === activeLayer ? 'visible' : 'none'
+      );
+    });
 
-  if (map.current.getLayer('district-borders')) {
-    const districtsVisibility = map.current.getLayoutProperty('districts-layer', 'visibility');
-    map.current.setLayoutProperty(
-      'district-borders',
-      'visibility',
-      districtsVisibility || 'none'
-    );
-  }
-}, [activeLayer]);
+    if (map.current.getLayer('district-borders')) {
+      const districtsVisibility = map.current.getLayoutProperty('districts-layer', 'visibility');
+      map.current.setLayoutProperty(
+        'district-borders',
+        'visibility',
+        districtsVisibility || 'none'
+      );
+    }
+  }, [activeLayer]);
 
 
   return (
     <div className="map-wrap">
-    <div id="mySidenav" className="sidenav">
-<a
-  href="#"
-  id="demografia"
-  onClick={(e) => {
-    e.preventDefault();
-    setActiveLayer('districts-layer');
-  }}
->
-   
-    <i>Demografia </i>
-    
-</a>
-  <a href="#" id="wydarzenia" onClick={(e) => {
-    e.preventDefault();
-    setActiveLayer('airports');
-  }}><i>Usługi</i></a>
-  
-  <a href="#" id="zgloszenia"><i>Zgłoszenia</i></a>
+      <div id="mySidenav" className="sidenav">
+        <a
+          href="#"
+          id="demografia"
+          onClick={(e) => {
+            e.preventDefault();
+            setActiveLayer('districts-layer');
+          }}
+        >
+          <b>Demografia</b>
+        </a>
+        <a 
+          href="#" id="wydarzenia" 
+          onClick={(e) => {
+            e.preventDefault();
+            setActiveLayer('airports');
+          }}
+        >
+          <b>Usługi</b>
+        </a>
 
-</div>
+        <a 
+          href="#" id="zgloszenia">
+            <b>Zgłoszenia</b>
+        </a>
+
+      </div>
 
 
       <div ref={mapContainer} className="map" />
       <div className="sidebar">
-        <OpinionForm/>
+        <OpinionForm />
         <button id="closeSideBarbtn">-</button>
       </div>
     </div>
   );
 }
-     
+
