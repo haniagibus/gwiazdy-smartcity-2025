@@ -15,15 +15,17 @@ export async function GET(req) {
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { id_object, name, added_date } = body;
+    const { x_coord, y_coord, desc, name, added_date } = body;
 
-    if (!id_object || !name) {
-      return new Response(JSON.stringify({ error: 'missing data' }), { status: 400 });
-    }
+    // if (!id_object || !name) {
+    //   return new Response(JSON.stringify({ error: 'missing data' }), { status: 400 });
+    // }
 
     const newReport = await prisma.report.create({
       data: {
-        id_object,
+        x_coord,
+        y_coord,
+        desc,
         name,
         added_date,
       },

@@ -37,19 +37,26 @@ export const getOpinionsFromDatabase = async () => {
 export const saveReportToDatabase = async (formData) => {
   const nick = formData.get("nick");
   const desc = formData.get("desc");
+  const x = formData.get('x_coord');
+  const y = formData.get('y_coord');
 
-  const res = await fetch("http://localhost:3000/api/reports", {
+  const res = await fetch("http://localhost:3000/api/report", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      id_object: 1,
+      x_coord: Number(x),
+      y_coord: Number(y),
       name: nick,
       desc: desc,
-      added_date: new Date(),
+      added_date: new Date().toISOString(),
     }),
   });
 
-  if (!res.ok) throw new Error("Failed to save report");
+  if (!res.ok) {
+  const errorText = await res.text();
+  console.error("API ERROR RESPONSE:", errorText);
+  throw new Error("Failed to save report");
+}
 
   const result = await res.json();
   return result;

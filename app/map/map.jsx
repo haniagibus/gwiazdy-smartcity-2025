@@ -6,23 +6,30 @@ import "@maptiler/sdk/dist/maptiler-sdk.css";
 import './map.css';
 import configData from '../config/config.ts';
 import OpinionForm from "../components/opinion_form";
+import ReportsList from "../components/reports_list";
 import '@maptiler/sdk/dist/maptiler-sdk.css';
 import { GeocodingControl } from '@maptiler/geocoding-control/maptilersdk';
 import '@maptiler/geocoding-control/style.css';
 
-const LAYERS = ['districts-layer', 'events'];
+const LAYERS = ['districts-layer', 'reports', 'events'];
 
 export default function Map() {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const [activeLayer, setActiveLayer] = useState('districts-layer');
+  const [selectedEvent, setSelectedEvent] = useState(null);
 
   const gdansk = { lng: 18.638306, lat: 54.372158 };
   const zoom = 11;
-  const demography_dataset_id = configData.MAPTILER_DATSET_ID;
+  const demography_dataset_id = configData.MAPTILER_DATSET_DISTRICTS_ID;
+  const reports_dataset_id = configData.MAPTILER_DATSET_REPORTS_ID;
+
   maptilersdk.config.apiKey = configData.MAPTILER_API_KEY;
 
   let hoveredDistrictId = null;
+
+  let report_lng = gdansk.lng;
+  let report_lat = gdansk.lat;
 
   useEffect(() => {
     if (map.current) return;
@@ -37,12 +44,25 @@ export default function Map() {
 
     map.current.on("load", async () => {
       const demography_dataset = await maptilersdk.data.get(demography_dataset_id);
+      const reports_dataset = await maptilersdk.data.get(reports_dataset_id);
 
       map.current.addSource('districts', {
         type: 'geojson',
         data: demography_dataset
       });
 
+      map.current.addSource('reports', {
+        type: 'geojson',
+        data: reports_dataset
+      });
+
+      const geocoder = new GeocodingControl({
+        //bbox: [18.31, 54.29, 18.87, 54.45]
+      });
+
+      map.current.addControl(geocoder, "bottom-right");
+
+      // [DISTRICTS LAYER]
       // The feature-district dependent fill-opacity expression will render the hover effect
       // when a feature's hover district is set to true.
       map.current.addLayer({
@@ -124,11 +144,20 @@ export default function Map() {
       });
 
 
-      const geocoder = new GeocodingControl({
-        //bbox: [18.31, 54.29, 18.87, 54.45]
-      });
+      // const geocoder = new GeocodingControl({
+      //   //bbox: [18.31, 54.29, 18.87, 54.45]
+      // });
 
-      map.current.addControl(geocoder, "top-left");
+      // [REPORTS LAYER]
+      map.current.addLayer({
+        id: 'reports-layer',
+        type: 'fill',
+        source: 'reports',
+        layout: {},
+        paint: {
+          'fill-opacity': 0
+        }
+      });
 
 
       // When the user moves their mouse over the state-fill layer, we'll update the
@@ -185,6 +214,38 @@ export default function Map() {
 
         map.current.getCanvas().style.cursor = '';
       });
+
+      // [REPORTS EVENT HOOKS]
+      map.current.on('mouseenter', 'reports-layer', function () {
+        map.current.getCanvas().style.cursor = 'pointer';
+      });
+
+      // map.current.on('click', 'reports-layer', function (e) {
+      //   new maptilersdk.Marker()
+      //     .setLngLat(e.lngLat)
+      //     .addTo(map.current);
+      // });
+
+      map.current.on('click', 'reports-layer', function (e) {
+        report_lng = e.lngLat.lng;
+        report_lat = e.lngLat.lat;
+
+        document.body.classList.add("sidebar-reports-open");
+        const closeBtn = document.getElementById("closeSideBarReportsbtn");
+        if (closeBtn) {
+          closeBtn.addEventListener("click", (ev) => {
+            ev.stopPropagation;
+            console.log("klik");
+
+            document.body.classList.remove("sidebar-reports-open");
+          });
+        }
+      });
+    });
+
+    map.current.on("click", 'airports', (e) => {
+      const { lng, lat } = e.lngLat;
+
     });
     map.current.on('load', async () => {
       const image = await map.current.loadImage("/star.png");
@@ -239,41 +300,94 @@ export default function Map() {
             },
           });
         });
+      map.current.on("click", "events", (e) => {
+        if (!e.features?.length) return;
 
-    });
-    map.current.on("click", 'districts-layer', (e) => {
-      const { lng, lat } = e.lngLat;
+        const props = e.features[0].properties;
 
-      const popup = new maptilersdk.Popup()
-        .setLngLat([lng, lat])
-        .setHTML(`<h3>pls dzialaj</h3><p>Lng: ${lng.toFixed(5)}, Lat: ${lat.toFixed(5)}</p>
-      <button id="openSidebarBtn">+</button>`)
+        const popup = new maptilersdk.Popup()
+          .setLngLat(e.lngLat)
+          .setHTML(`
+      <h3>${props.name}</h3>
+      <p>${props.date} ${props.hour}</p>
+     <button id="openSidebarBtn" style="
+     margin-left:25px;
+      width:70%;
+      padding: 8px 12px;
+      background: #0B70D5;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+    ">
+      Zobacz więcej
+    </button>
+    `);
 
-      popup.on("open", () => {
+        popup.on("open", () => {
+          const popupEl = popup.getElement();
+          const btn = popupEl.querySelector("#openSidebarBtn");
+          if (btn) {
+            btn.addEventListener("click", (ev) => {
+              ev.stopPropagation();
+              ev.preventDefault();
+              setSelectedEvent(props);
+              console.log("klik");
+              document.body.classList.add("sidebar-open");
+            });
+          }
 
-        const btn = document.getElementById("openSidebarBtn");
-        if (btn) {
-          btn.addEventListener("click", (ev) => {
-            ev.stopPropagation;
-            console.log("klik");
+          const closeBtn = document.getElementById("closeSideBarbtn");
+          if (closeBtn) {
+            closeBtn.addEventListener("click", (ev) => {
+              ev.stopPropagation();
+              ev.preventDefault();
 
-            document.body.classList.add("sidebar-open");
-          });
-        }
+              console.log("zamknij");
+              document.body.classList.remove("sidebar-open");
+              setSelectedEvent(null);
+            });
+          }
+        });
 
-        const closeBtn = document.getElementById("closeSideBarbtn");
-        if (closeBtn) {
-          closeBtn.addEventListener("click", (ev) => {
-            ev.stopPropagation;
-            console.log("klik");
-
-            document.body.classList.remove("sidebar-open");
-          });
-        }
-
+        popup.addTo(map.current);
       });
-      popup.addTo(map.current);
+
     });
+    //  map.current.on("click", 'districts-layer',(e)=> {
+    //     const { lng, lat } = e.lngLat;
+
+    //       const popup = new maptilersdk.Popup()
+    //         .setLngLat([lng, lat])
+    //         .setHTML(`<h3>pls dzialaj</h3><p>Lng: ${lng.toFixed(5)}, Lat: ${lat.toFixed(5)}</p>
+    //       <button id="openSidebarBtn">+</button>`)
+
+    //       popup.on("open", () => {
+
+    //         const btn = document.getElementById("openSidebarBtn");
+    //         if (btn) {
+    //           btn.addEventListener("click", (ev) => {
+    //             ev.stopPropagation;
+    //             console.log("klik");
+
+    //             document.body.classList.add("sidebar-open");
+    //           });
+    //         }
+
+    //         const closeBtn = document.getElementById("closeSideBarbtn");
+    //         if (closeBtn) {
+    //           closeBtn.addEventListener("click", (ev) => {
+    //             ev.stopPropagation;
+    //             console.log("klik");
+
+    //             document.body.classList.remove("sidebar-open");
+    //           });
+    //         }
+
+    //       });
+    //       popup.addTo(map.current);
+    //     });
   }, [gdansk.lng, gdansk.lat, zoom]);
 
   useEffect(() => {
@@ -288,20 +402,8 @@ export default function Map() {
         id === activeLayer ? 'visible' : 'none'
       );
     });
-    map.current.on("click", 'events', (e) => {
-      const props = e.features[0].properties;
-      new maptilersdk.Popup()
-        .setLngLat(e.lngLat)
-        .setHTML(`
-      <h3>${props.name}</h3>
-      <p>${props.date} ${props.hour}</p>
-      <p>${props.place_name}, ${props.street}, ${props.city}</p>
-      ${props.image ? `<img src="${props.image}" style="max-width:150px" />` : ''}
-      
-    `)
-        .addTo(map.current);
 
-    });
+
     // if (map.current.getLayer('district-borders')) {
     //   const districtsVisibility = map.current.getLayoutProperty('districts-layer', 'visibility');
     //   map.current.setLayoutProperty(
@@ -319,6 +421,11 @@ export default function Map() {
     //   );
     // }
   }, [activeLayer]);
+
+
+
+
+
 
   return (
     <div className="map-wrap">
@@ -351,6 +458,7 @@ export default function Map() {
           <b>Zgłoszenia</b>
           <img src="/symbol_excla_nav.png" alt="Zgłoszenia" />
         </a>
+
       </div>
 
 
@@ -358,9 +466,57 @@ export default function Map() {
 
       <div ref={mapContainer} className="map" />
       <div className="sidebar">
-        <OpinionForm />
-        <button id="closeSideBarbtn">-</button>
+        {selectedEvent ? (
+          <div className="event-card">
+            <div className="event-header">
+              <h2>{selectedEvent.name}</h2>
+              <p className="event-datetime">
+                <span>{selectedEvent.date}</span>
+                <span>{selectedEvent.hour}</span>
+              </p>
+            </div>
+
+            {selectedEvent.image && (
+              <img
+                className="event-image"
+                src={selectedEvent.image}
+                alt={selectedEvent.name}
+              />
+            )}
+
+            <div className="event-info">
+              <p>
+                <strong>Miejsce:</strong><br />
+                {selectedEvent.place_name}<br />
+                {selectedEvent.street}<br />
+                {selectedEvent.city}
+              </p>
+            </div>
+
+
+          </div>
+        ) : (
+          <OpinionForm />
+        )}
+
+        <button
+          id="closeSideBarbtn"
+          className="close-sidebar-btn"
+          onClick={(e) => {
+            e.preventDefault();
+            document.body.classList.remove("sidebar-open");
+            setSelectedEvent(null);
+          }}
+        >
+          X
+        </button>
       </div>
+      <div className="sidebar-reports">
+        <ReportsList lng={report_lng} lat={report_lat} />
+        <button id="closeSideBarReportsbtn">-</button>
+      </div>
+
+
     </div>
   );
 }
