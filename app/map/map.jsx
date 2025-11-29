@@ -164,13 +164,13 @@ export default function Map() {
 
       map.current.on('mouseleave', 'districts-layer', function () {
         if (hoveredDistrictId) {
-            map.current.setFeatureState(
-                { source: 'districts', id: hoveredDistrictId },
-                { hover: false }
-            );
+          map.current.setFeatureState(
+            { source: 'districts', id: hoveredDistrictId },
+            { hover: false }
+          );
         }
         hoveredDistrictId = null;
-    });
+      });
 
       map.current.on('click', 'districts-layer', e => {
         const f = e.features && e.features[0];
@@ -196,6 +196,13 @@ export default function Map() {
     map.current.on('load', async () => {
       const image = await map.current.loadImage('/symbol_excla.png');
       map.current.addImage('pinReport', image.data);
+
+      const reports_dataset = await maptilersdk.data.get(reports_dataset_id);
+
+      map.current.addSource('reports_data', {
+        type: 'geojson',
+        data: reports_dataset
+      });
 
       const reports = await getReportsFromDatabase();
 
@@ -230,17 +237,27 @@ export default function Map() {
           'icon-size': 0.8
         }
       });
+
+      map.current.addLayer({
+        id: 'reports-layer-background',
+        type: 'fill',
+        source: 'reports_data',
+        layout: {},
+        paint: {
+          'fill-opacity': 0
+        }
+      });
     });
 
-    map.current.on('mouseenter', 'reports-layer', () => {
+    map.current.on('mouseenter', 'reports-layer-background', () => {
       map.current.getCanvas().style.cursor = 'pointer';
     });
 
-    map.current.on('mouseleave', 'reports-layer', () => {
+    map.current.on('mouseleave', 'reports-layer-background', () => {
       map.current.getCanvas().style.cursor = '';
     });
 
-    map.current.on('click', 'reports-layer', e => {
+    map.current.on('click', 'reports-layer', async (e) => {
       const feature = e.features[0];
       const [lng, lat] = feature.geometry.coordinates;
 
@@ -318,10 +335,10 @@ export default function Map() {
         const popup = new maptilersdk.Popup()
           .setLngLat(e.lngLat)
           .setHTML(`
-      <h3>${props.name}</h3>
-      <p>${props.date} ${props.hour}</p>
+      <h2 style="text-align: center;">${props.name}</h2>
+      <p style="text-align: center;">${props.date} | ${props.hour}</p>
      <button id="openSidebarBtn" style="
-     margin-left:25px;
+     margin-left:30px;
       width:70%;
       padding: 8px 12px;
       background: #0B70D5;
@@ -711,14 +728,21 @@ export default function Map() {
 
       <div ref={mapContainer} className="map" />
       <div className="sidebar">
+        <button
+          id="closeSideBarbtn"
+          className="close-sidebar-btn"
+          onClick={(e) => {
+            e.preventDefault();
+            document.body.classList.remove("sidebar-open");
+            setSelectedEvent(null);
+          }}
+        >
+          -
+        </button>
         {selectedEvent ? (
           <div className="event-card">
             <div className="event-header">
               <h2>{selectedEvent.name}</h2>
-              <p className="event-datetime">
-                <span>{selectedEvent.date}</span>
-                <span>{selectedEvent.hour}</span>
-              </p>
             </div>
 
             {selectedEvent.image && (
@@ -730,6 +754,10 @@ export default function Map() {
             )}
 
             <div className="event-info">
+              <p className="event-datetime">
+                <span>{selectedEvent.date} | </span>
+                <span>{selectedEvent.hour}</span>
+              </p>
               <p>
                 <strong>Miejsce:</strong><br />
                 {selectedEvent.place_name}<br />
@@ -743,18 +771,6 @@ export default function Map() {
         ) : (
           <OpinionForm />
         )}
-
-        <button
-          id="closeSideBarbtn"
-          className="close-sidebar-btn"
-          onClick={(e) => {
-            e.preventDefault();
-            document.body.classList.remove("sidebar-open");
-            setSelectedEvent(null);
-          }}
-        >
-          X
-        </button>
       </div>
       <div className="sidebar-reports">
         <Suspense fallback={<div>Ładowanie…</div>}>

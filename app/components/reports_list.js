@@ -22,7 +22,7 @@ const ReportList = ({ lng, lat }) => {
 
     return (
         <div>
-            <h2>Lista raportów:</h2>
+            <h2>Lista raportów</h2>
 
             <button onClick={() => setShowForm(true)}>
                 Dodaj nowy raport
@@ -36,7 +36,13 @@ const ReportList = ({ lng, lat }) => {
 
             <ul>
                 {reports.map((item, index) => (
-                    <li key={index}>{JSON.stringify(item)}</li>
+                    <li key={index} className="report-item">
+                        <p><strong>Nick:</strong> {item.name}</p>
+                        <p><strong>Koordynaty:</strong> {item.x_coord}, {item.y_coord}</p>
+                        <p><strong>Dodano:</strong> {new Date(item.added_date).toLocaleString()}</p>
+                        <p><strong>Treść zgłoszenia::</strong></p>
+                        <p>{item.desc}</p>
+                    </li>
                 ))}
             </ul>
         </div>
