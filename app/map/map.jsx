@@ -128,23 +128,42 @@ export default function Map() {
       });
 
 
-      map.current.on('mousemove', 'districts-layer', e => {
-        if (!e.features || !e.features.length) return;
+      // map.current.on('mousemove', 'districts-layer', e => {
+      //   if (!e.features || !e.features.length) return;
 
-        if (hoveredDistrictId !== null) {
-          map.current.setFeatureState(
-            { source: 'districts', id: hoveredDistrictId },
-            { hover: false }
-          );
-        }
+      //   if (hoveredDistrictId !== null) {
+      //     map.current.setFeatureState(
+      //       { source: 'districts', id: hoveredDistrictId },
+      //       { hover: false }
+      //     );
+      //   }
 
-        hoveredDistrictId = e.features[0].id;
-        map.current.setFeatureState(
-          { source: 'districts', id: hoveredDistrictId },
-          { hover: true }
-        );
-      });
+      //   hoveredDistrictId = e.features[0].id;
+      //   map.current.setFeatureState(
+      //     { source: 'districts', id: hoveredDistrictId },
+      //     { hover: true }
+      //   );
+      // });
 
+      // // When the user moves their mouse over the state-fill layer, we'll update the
+      // // feature state for the feature under the mouse.
+      // map.current.on('mousemove', 'districts-layer', function (e) {
+      //   if (e.features.length > 0) {
+      //     if (hoveredDistrictId) {
+      //       map.current.setFeatureState(
+      //         { source: 'districts', id: hoveredDistrictId },
+      //         { hover: false }
+      //       );
+      //     }
+      //     hoveredDistrictId = e.features[0].id;
+      //     map.current.setFeatureState(
+      //       { source: 'districts', id: hoveredDistrictId },
+      //       { hover: false }
+      //     );
+      //   }
+      //   hoveredDistrictId = null;
+      //   map.current.getCanvas().style.cursor = '';
+      // });
 
       // When the user moves their mouse over the state-fill layer, we'll update the
       // feature state for the feature under the mouse.
@@ -159,12 +178,20 @@ export default function Map() {
           hoveredDistrictId = e.features[0].id;
           map.current.setFeatureState(
             { source: 'districts', id: hoveredDistrictId },
-            { hover: false }
+            { hover: true }
           );
         }
-        hoveredDistrictId = null;
-        map.current.getCanvas().style.cursor = '';
       });
+
+      map.current.on('mouseleave', 'districts-layer', function () {
+        if (hoveredDistrictId) {
+            map.current.setFeatureState(
+                { source: 'districts', id: hoveredDistrictId },
+                { hover: false }
+            );
+        }
+        hoveredDistrictId = null;
+    });
 
       map.current.on('click', 'districts-layer', e => {
         const f = e.features && e.features[0];
@@ -188,7 +215,7 @@ export default function Map() {
     });
 
     map.current.on('load', async () => {
-      const image = await map.current.loadImage('/fireworks.png');
+      const image = await map.current.loadImage('/symbol_excla.png');
       map.current.addImage('pinReport', image.data);
 
       const reports = await getReportsFromDatabase();
@@ -250,7 +277,7 @@ export default function Map() {
         };
       }
     });
-    
+
     map.current.on('load', async () => {
       const image = await map.current.loadImage("/star.png");
       map.current.addImage('pinMetro', image.data);
@@ -361,291 +388,291 @@ export default function Map() {
     });
   }, [gdansk.lng, gdansk.lat, zoom]);
 
-useEffect(() => {
-  if (!map.current) return;
+  useEffect(() => {
+    if (!map.current) return;
 
-  LAYERS.forEach(id => {
-    if (!map.current.getLayer(id)) return;
+    LAYERS.forEach(id => {
+      if (!map.current.getLayer(id)) return;
 
-    map.current.setLayoutProperty(
-      id,
-      'visibility',
-      id === activeLayer ? 'visible' : 'none'
-    );
-  });
-  map.current.on('load', async () => {
+      map.current.setLayoutProperty(
+        id,
+        'visibility',
+        id === activeLayer ? 'visible' : 'none'
+      );
+    });
+    map.current.on('load', async () => {
       const image2 = await map.current.loadImage("/hospital.png");
       map.current.addImage('pinHospital', image2.data);
-          fetch('/hospital.csv') 
-            .then((res) => res.text())
-            .then((text) => {
-              const lines = text.trim().split('\n');
-              const header = lines[0].split(',').map(h => h.trim()); 
+      fetch('/hospital.csv')
+        .then((res) => res.text())
+        .then((text) => {
+          const lines = text.trim().split('\n');
+          const header = lines[0].split(',').map(h => h.trim());
 
-              const features = lines.slice(1).map((line) => {
-              const cols = line.split(',').map(c => c.trim());      
-                const obj = {};
-                
-                header.forEach((h, i) => {
-                  obj[h] = cols[i];
-                });
-                
-                return {
-                  type: 'Feature',
-                  geometry: {
-                    type: 'Point',
-                    coordinates: [
-                      parseFloat(obj.lon), 
-                      parseFloat(obj.lat),
-                    ],
-                  },
-                  properties: {
-                    id: obj.id,
-                    name: obj.name,
-                  },
-                  
-                };
-              });
+          const features = lines.slice(1).map((line) => {
+            const cols = line.split(',').map(c => c.trim());
+            const obj = {};
 
-      
-              
-              const geojson = {
-                type: 'FeatureCollection',
-                features,
-              };
-              console.log(geojson);
-              
-
-            
-              map.current.addSource('hospitals', {
-                type: 'geojson',
-                data: geojson,
-              });
-
-              map.current.addLayer({
-                id: 'hospitals',
-                type: 'symbol', 
-                source: 'hospitals',
-                layout:{
-                  visibility:activeLayer==='hospitals'?'visible':'none',
-                  'icon-image': 'pinHospital',
-                  'icon-size': 0.8
-
-                },
-                paint: {
-                  
-                },
-              });
+            header.forEach((h, i) => {
+              obj[h] = cols[i];
             });
-        });
 
-     map.current.on('load', async () => {
+            return {
+              type: 'Feature',
+              geometry: {
+                type: 'Point',
+                coordinates: [
+                  parseFloat(obj.lon),
+                  parseFloat(obj.lat),
+                ],
+              },
+              properties: {
+                id: obj.id,
+                name: obj.name,
+              },
+
+            };
+          });
+
+
+
+          const geojson = {
+            type: 'FeatureCollection',
+            features,
+          };
+          console.log(geojson);
+
+
+
+          map.current.addSource('hospitals', {
+            type: 'geojson',
+            data: geojson,
+          });
+
+          map.current.addLayer({
+            id: 'hospitals',
+            type: 'symbol',
+            source: 'hospitals',
+            layout: {
+              visibility: activeLayer === 'hospitals' ? 'visible' : 'none',
+              'icon-image': 'pinHospital',
+              'icon-size': 0.8
+
+            },
+            paint: {
+
+            },
+          });
+        });
+    });
+
+    map.current.on('load', async () => {
       const image = await map.current.loadImage("/bus.png");
       map.current.addImage('pinBus', image.data);
-          fetch('/przystanki.csv') 
-  .then((res) => res.text())
-  .then((text) => {
-    const lines = text.trim().split('\n');
+      fetch('/przystanki.csv')
+        .then((res) => res.text())
+        .then((text) => {
+          const lines = text.trim().split('\n');
 
-    const header = lines[0].split(',').map(h => h.trim()); 
+          const header = lines[0].split(',').map(h => h.trim());
 
-    const features = lines.slice(1).map((line) => {
-      const cols = line.split(',').map(c => c.trim());      
-      const obj={};
-      
-      header.forEach((h, i) => {
-        obj[h] = cols[i];
-      });
+          const features = lines.slice(1).map((line) => {
+            const cols = line.split(',').map(c => c.trim());
+            const obj = {};
 
-      const lat = parseFloat(obj.lat);
-      const lon = parseFloat(obj.lon);
+            header.forEach((h, i) => {
+              obj[h] = cols[i];
+            });
 
-      return {
-        type: 'Feature',
-        geometry: {
-          type: 'Point',
-          coordinates: [lon, lat],
-        },
-        properties: obj,
-      };
-    });
-    
-    const geojson = {
-      type: 'FeatureCollection',
-      features,
-    };
-    console.log(geojson);
+            const lat = parseFloat(obj.lat);
+            const lon = parseFloat(obj.lon);
 
-    map.current.addSource('bus', {
-      type: 'geojson',
-      data: geojson,
-    });
+            return {
+              type: 'Feature',
+              geometry: {
+                type: 'Point',
+                coordinates: [lon, lat],
+              },
+              properties: obj,
+            };
+          });
 
-    map.current.addLayer({
-      id: 'bus',
-      type: 'symbol', 
-      source: 'bus',
-      layout:{
-        visibility: activeLayer === 'bus' ? 'visible' : 'none',
-        'icon-image': 'pinBus',
-        'icon-size': 0.8
-      },
-    });
-  });
+          const geojson = {
+            type: 'FeatureCollection',
+            features,
+          };
+          console.log(geojson);
 
+          map.current.addSource('bus', {
+            type: 'geojson',
+            data: geojson,
+          });
+
+          map.current.addLayer({
+            id: 'bus',
+            type: 'symbol',
+            source: 'bus',
+            layout: {
+              visibility: activeLayer === 'bus' ? 'visible' : 'none',
+              'icon-image': 'pinBus',
+              'icon-size': 0.8
+            },
+          });
         });
-  map.current.on('load', async () => {
+
+    });
+    map.current.on('load', async () => {
       const image = await map.current.loadImage("/university.png");
       map.current.addImage('pinUni', image.data);
-          fetch('/schools.csv') 
-  .then((res) => res.text())
-  .then((text) => {
-    const lines = text.trim().split('\n');
+      fetch('/schools.csv')
+        .then((res) => res.text())
+        .then((text) => {
+          const lines = text.trim().split('\n');
 
-    const header = lines[0].split(',').map(h => h.trim()); 
+          const header = lines[0].split(',').map(h => h.trim());
 
-    const features = lines.slice(1).map((line) => {
-      const cols = line.split(',').map(c => c.trim());      
-      const obj={};
-      
-      header.forEach((h, i) => {
-        obj[h] = cols[i];
-      });
+          const features = lines.slice(1).map((line) => {
+            const cols = line.split(',').map(c => c.trim());
+            const obj = {};
 
-      const lat = parseFloat(obj.lat);
-      const lon = parseFloat(obj.lon);
+            header.forEach((h, i) => {
+              obj[h] = cols[i];
+            });
 
-      return {
-        type: 'Feature',
-        geometry: {
-          type: 'Point',
-          coordinates: [lon, lat],
-        },
-        properties: obj,
-      };
-    });
-    
-    const geojson = {
-      type: 'FeatureCollection',
-      features,
-    };
-    console.log(geojson);
+            const lat = parseFloat(obj.lat);
+            const lon = parseFloat(obj.lon);
 
-    map.current.addSource('uni', {
-      type: 'geojson',
-      data: geojson,
-    });
+            return {
+              type: 'Feature',
+              geometry: {
+                type: 'Point',
+                coordinates: [lon, lat],
+              },
+              properties: obj,
+            };
+          });
 
-    map.current.addLayer({
-      id: 'uni',
-      type: 'symbol', 
-      source: 'uni',
-      layout:{
-        visibility: activeLayer === 'uni' ? 'visible' : 'none',
-        'icon-image': 'pinUni',
-        'icon-size': 0.8
-      },
-    });
-  });
+          const geojson = {
+            type: 'FeatureCollection',
+            features,
+          };
+          console.log(geojson);
 
+          map.current.addSource('uni', {
+            type: 'geojson',
+            data: geojson,
+          });
+
+          map.current.addLayer({
+            id: 'uni',
+            type: 'symbol',
+            source: 'uni',
+            layout: {
+              visibility: activeLayer === 'uni' ? 'visible' : 'none',
+              'icon-image': 'pinUni',
+              'icon-size': 0.8
+            },
+          });
         });
 
-map.current.on("click", 'events',(e) => {
-  const props=e.features[0].properties;
-    new maptilersdk.Popup()
-    .setLngLat(e.lngLat)
-    .setHTML(`
-      <h3 >${props.name}</h3>
-      <p>${props.date} ${props.hour}</p>
-      <p>${props.place_name}, ${props.street}, ${props.city}</p>
-      ${props.image ? `<img src="${props.image}" style="max-width:150px" />` : ''}
-      
-    `)
-    .addTo(map.current);
+    });
 
-});
-map.current.on("click", 'hospitals',(e) => {
-  const props=e.features[0].properties;
-    new maptilersdk.Popup()
-    .setLngLat(e.lngLat)
-    .setHTML(`
+    // map.current.on("click", 'events', (e) => {
+    //   const props = e.features[0].properties;
+    //   new maptilersdk.Popup()
+    //     .setLngLat(e.lngLat)
+    //     .setHTML(`
+    //   <h3 >${props.name}</h3>
+    //   <p>${props.date} ${props.hour}</p>
+    //   <p>${props.place_name}, ${props.street}, ${props.city}</p>
+    //   ${props.image ? `<img src="${props.image}" style="max-width:150px" />` : ''}
+
+    // `)
+    //     .addTo(map.current);
+
+    // });
+    map.current.on("click", 'hospitals', (e) => {
+      const props = e.features[0].properties;
+      new maptilersdk.Popup()
+        .setLngLat(e.lngLat)
+        .setHTML(`
       <h4 style="text-align: center;">${props.name}</h4>
       
     `)
-    .addTo(map.current);
+        .addTo(map.current);
 
-});
+    });
 
-map.current.on("click", 'uni',(e) => {
-  const props=e.features[0].properties;
-    new maptilersdk.Popup()
-    .setLngLat(e.lngLat)
-    .setHTML(`
+    map.current.on("click", 'uni', (e) => {
+      const props = e.features[0].properties;
+      new maptilersdk.Popup()
+        .setLngLat(e.lngLat)
+        .setHTML(`
       <h4 style="text-align: center;">${props.name}</h4>
       
     `)
-    .addTo(map.current);
+        .addTo(map.current);
 
-});
+    });
 
-map.current.on("click", 'bus',(e) => {
-  const props=e.features[0].properties;
-    new maptilersdk.Popup()
-    .setLngLat(e.lngLat)
-    .setHTML(`
+    map.current.on("click", 'bus', (e) => {
+      const props = e.features[0].properties;
+      new maptilersdk.Popup()
+        .setLngLat(e.lngLat)
+        .setHTML(`
       <h4 style="text-align: center;">Przystanek ${props.name}</h4>
       
     `)
-    .addTo(map.current);
+        .addTo(map.current);
 
-});
+    });
 
-  if (map.current.getLayer('hospitals')) {
-    const districtsVisibility = map.current.getLayoutProperty('events', 'visibility');
-    map.current.setLayoutProperty(
-      'hospitals',
-      'visibility',
-      districtsVisibility || 'none'
-    );
-  }
+    if (map.current.getLayer('hospitals')) {
+      const districtsVisibility = map.current.getLayoutProperty('events', 'visibility');
+      map.current.setLayoutProperty(
+        'hospitals',
+        'visibility',
+        districtsVisibility || 'none'
+      );
+    }
     if (map.current.getLayer('bus')) {
-    const districtsVisibility = map.current.getLayoutProperty('events', 'visibility');
-    map.current.setLayoutProperty(
-      'bus',
-      'visibility',
-      districtsVisibility || 'none'
-    );
-  }
-  if (map.current.getLayer('uni')) {
-    const districtsVisibility = map.current.getLayoutProperty('events', 'visibility');
-    map.current.setLayoutProperty(
-      'uni',
-      'visibility',
-      districtsVisibility || 'none'
-    );
-  }
+      const districtsVisibility = map.current.getLayoutProperty('events', 'visibility');
+      map.current.setLayoutProperty(
+        'bus',
+        'visibility',
+        districtsVisibility || 'none'
+      );
+    }
+    if (map.current.getLayer('uni')) {
+      const districtsVisibility = map.current.getLayoutProperty('events', 'visibility');
+      map.current.setLayoutProperty(
+        'uni',
+        'visibility',
+        districtsVisibility || 'none'
+      );
+    }
 
 
-  // if (map.current.getLayer('district-borders')) {
-  //   const districtsVisibility = map.current.getLayoutProperty('districts-layer', 'visibility');
-  //   map.current.setLayoutProperty(
-  //     'district-borders',
-  //     'visibility',
-  //     districtsVisibility || 'none'
-  //   );
-  // }
-  // if (map.current.getLayer('events')) {
-  //   const districtsVisibility = map.current.getLayoutProperty('events', 'visibility');
-  //   map.current.setLayoutProperty(
-  //     'district-borders',
-  //     'visibility',
-  //     districtsVisibility || 'none'
-  //   );
-  // }
-}, [activeLayer]);
+    // if (map.current.getLayer('district-borders')) {
+    //   const districtsVisibility = map.current.getLayoutProperty('districts-layer', 'visibility');
+    //   map.current.setLayoutProperty(
+    //     'district-borders',
+    //     'visibility',
+    //     districtsVisibility || 'none'
+    //   );
+    // }
+    // if (map.current.getLayer('events')) {
+    //   const districtsVisibility = map.current.getLayoutProperty('events', 'visibility');
+    //   map.current.setLayoutProperty(
+    //     'district-borders',
+    //     'visibility',
+    //     districtsVisibility || 'none'
+    //   );
+    // }
+  }, [activeLayer]);
 
 
-       
+
   useEffect(() => {
     if (!map.current) return;
 
