@@ -10,6 +10,7 @@ import ReportsList from "../components/reports_list";
 import '@maptiler/sdk/dist/maptiler-sdk.css';
 import { GeocodingControl } from '@maptiler/geocoding-control/maptilersdk';
 import '@maptiler/geocoding-control/style.css';
+import OpinionsList from "../components/opinions_list";
 
 const LAYERS = ['districts-layer', 'reports', 'events'];
 
@@ -18,6 +19,7 @@ export default function Map() {
   const map = useRef(null);
   const [activeLayer, setActiveLayer] = useState('districts-layer');
   const [selectedEvent, setSelectedEvent] = useState(null);
+const [selectedRaport, setSelectedRaport] = useState(null);
 
   const gdansk = { lng: 18.638306, lat: 54.372158 };
   const zoom = 11;
@@ -147,6 +149,15 @@ export default function Map() {
           'fill-opacity': 0
         }
       });
+      map.current.on("click", "raports", (e) => {
+  if (!e.features?.length) return;
+
+  const props = e.features[0].properties;
+
+  setSelectedRaport(props);
+
+  document.body.classList.add("sidebar-raports-open");
+});
 
     
       // When the user moves their mouse over the state-fill layer, we'll update the
@@ -442,7 +453,7 @@ useEffect(() => {
 
 
       <div ref={mapContainer} className="map" />
-    <div className="sidebar">
+<div className="sidebar">
   {selectedEvent ? (
     <div className="event-card">
       <div className="event-header">
@@ -470,7 +481,12 @@ useEffect(() => {
         </p>
       </div>
 
-      
+      <OpinionsList
+        lat={parseFloat(selectedEvent.lat)}
+        lon={parseFloat(selectedEvent.lon)}
+      />
+
+    
     </div>
   ) : (
     <OpinionForm />
@@ -488,6 +504,7 @@ useEffect(() => {
     X
   </button>
 </div>
+
 <div className="sidebar-reports">
         <ReportsList lng={report_lng} lat={report_lat} />
         <button id="closeSideBarReportsbtn">-</button>

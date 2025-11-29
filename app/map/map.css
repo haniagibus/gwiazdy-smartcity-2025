@@ -161,3 +161,46 @@ body.sidebar-reports-open .sidebar-reports {
   box-shadow: 0 3px 8px rgba(0,0,0,0.2);
   z-index: 10000;
 }
+.opinions-list {
+  margin-top: 15px;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+}
+
+.opinions-list h3 {
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  color: #0B70D5;
+}
+
+.opinion-item {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #f8f9fc;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.opinion-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.opinion-name {
+  font-weight: 600;
+}
+
+.opinion-rating {
+  font-size: 12px;
+}
+
+.opinion-desc {
+  margin: 0 0 4px 0;
+}
+
+.opinion-date {
+  margin: 0;
+  font-size: 11px;
+  color: #777;
+}
