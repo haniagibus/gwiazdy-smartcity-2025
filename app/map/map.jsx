@@ -6,6 +6,7 @@ import '@maptiler/sdk/dist/maptiler-sdk.css';
 import './map.css';
 import configData from '../config/config';
 import OpinionForm from '../components/opinion_form.js';
+import OpinionsList from '../components/opinions_list.js';
 import { getReportsFromDatabase } from '../services/action.js';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
@@ -192,13 +193,13 @@ const [forecastYear, setForecastYear] = useState(2025);
 
       map.current.on('mouseleave', 'districts-layer', function () {
         if (hoveredDistrictId) {
-            map.current.setFeatureState(
-                { source: 'districts', id: hoveredDistrictId },
-                { hover: false }
-            );
+          map.current.setFeatureState(
+            { source: 'districts', id: hoveredDistrictId },
+            { hover: false }
+          );
         }
         hoveredDistrictId = null;
-    });
+      });
 
       map.current.on('click', 'districts-layer', e => {
         const f = e.features && e.features[0];
@@ -1008,6 +1009,10 @@ useEffect(() => {
               </p>
             </div>
 
+            <OpinionsList
+              lat={parseFloat(selectedEvent.lat)}
+              lon={parseFloat(selectedEvent.lon)}
+            />
 
           </div>
         ) : (

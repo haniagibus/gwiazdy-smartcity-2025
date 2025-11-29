@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Rating } from "react-simple-star-rating";
 import { saveOpinionToDatabase } from "../services/action.js"
 
-const OpinionForm = () => {
+const OpinionForm = ({ lng, lat }) => {
     const [formData, setFormData] = useState({
         nick: "",
         desc: "",
@@ -73,6 +73,8 @@ const OpinionForm = () => {
             />
 
             <input type="hidden" name="rating" value={formData.rating} />
+            <input type="hidden" name="x_coord" value={lng} />
+            <input type="hidden" name="y_coord" value={lat} />
 
             <button type="submit" className="button">
                 Submit

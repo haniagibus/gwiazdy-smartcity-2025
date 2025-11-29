@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Rating } from "react-simple-star-rating";
-import {saveReportToDatabase} from "../services/action.js"
+import { saveReportToDatabase } from "../services/action.js"
 
 const ReportForm = ({ lng, lat }) => {
     const [formData, setFormData] = useState({
@@ -16,72 +16,74 @@ const ReportForm = ({ lng, lat }) => {
     };
 
     const handleReset = () => {
-    setFormData({
-        x_coord: 0,
-        y_coord: 0,
-        nick: "",
-        desc: "",
-    });
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault(); 
-
-        const data = new FormData(e.target); 
-
-         try {
-        const savedReport = await saveReportToDatabase(data); 
-        console.log("Zapisano raport:", savedReport);
         setFormData({
-            x_coord: lng,
-            y_coord: lat,
+            x_coord: 0,
+            y_coord: 0,
             nick: "",
             desc: "",
         });
-        
+    };
 
-    } catch (error) {
-        console.error("Błąd zapisu raportu:", error);
-    }
+    const handleSubmit = async (e) => {
+        e.preventDefault();
 
-    }; 
+        const data = new FormData(e.target);
+
+        try {
+            const savedReport = await saveReportToDatabase(data);
+            console.log("Zapisano raport:", savedReport);
+            setFormData({
+                x_coord: lng,
+                y_coord: lat,
+                nick: "",
+                desc: "",
+            });
+
+
+        } catch (error) {
+            console.error("Błąd zapisu raportu:", error);
+        }
+
+    };
 
     return (
-        <form className="form" onSubmit={handleSubmit}>
-    <label htmlFor="nick" className="label">
-        Nick:
-    </label>
-    <input
-        type="text"
-        id="nick"
-        name="nick"
-        value={formData.nick}
-        onChange={handleChange}
-        className="input"
-    />
+        <div className="form-card">
+            <form className="form" onSubmit={handleSubmit}>
+                <label htmlFor="nick" className="label">
+                    Nick:
+                </label>
+                <input
+                    type="text"
+                    id="nick"
+                    name="nick"
+                    value={formData.nick}
+                    onChange={handleChange}
+                    className="input"
+                />
 
-    <label htmlFor="desc" className="label">
-        Description:
-    </label>
-    <textarea
-        id="desc"
-        name="desc"
-        value={formData.desc}
-        onChange={handleChange}
-        className="textarea"
-    />
+                <label htmlFor="desc" className="label">
+                    Treść zgłoszenia:
+                </label>
+                <textarea
+                    id="desc"
+                    name="desc"
+                    value={formData.desc}
+                    onChange={handleChange}
+                    className="textarea"
+                />
 
-    <input type="hidden" name="x_coord" value={lng} />
-    <input type="hidden" name="y_coord" value={lat} />
+                <input type="hidden" name="x_coord" value={lng} />
+                <input type="hidden" name="y_coord" value={lat} />
 
-    <button type="submit" className="button">
-        Submit
-    </button>
+                <button type="submit" className="button">
+                    Wyślij
+                </button>
 
-    <button type="reset" className="button" onClick={handleReset}>
-        Reset
-    </button>
-</form>
+                <button type="reset" className="button" onClick={handleReset}>
+                    Resetuj
+                </button>
+            </form>
+        </div>
     );
 };
 
