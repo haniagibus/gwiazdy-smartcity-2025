@@ -20,6 +20,7 @@ export default function Map() {
 
   const [activeLayer, setActiveLayer] = useState('districts-layer');
   const [reportCoords, setReportCoords] = useState([]);
+  const [selectedEvent, setSelectedEvent] = useState(null);
 
   const gdansk = { lng: 18.638306, lat: 54.372158 };
   const zoom = 11;
@@ -56,7 +57,7 @@ export default function Map() {
       // });
 
       const geocoder = new GeocodingControl({});
-      map.current.addControl(geocoder, 'bottom-right');
+      map.current.addControl(geocoder, "top-left");
 
       map.current.addLayer({
         id: 'districts-layer',
@@ -115,6 +116,18 @@ export default function Map() {
         }
       });
 
+      map.current.addLayer({
+        id: 'districts-fills',
+        type: 'fill',
+        source: 'districts',
+        layout: {},
+        paint: {
+          'fill-color': '#08519c',
+          'fill-opacity': 0.1
+        }
+      });
+
+
       map.current.on('mousemove', 'districts-layer', e => {
         if (!e.features || !e.features.length) return;
 
@@ -132,8 +145,18 @@ export default function Map() {
         );
       });
 
-      map.current.on('mouseleave', 'districts-layer', () => {
-        if (hoveredDistrictId !== null) {
+
+      // When the user moves their mouse over the state-fill layer, we'll update the
+      // feature state for the feature under the mouse.
+      map.current.on('mousemove', 'districts-layer', function (e) {
+        if (e.features.length > 0) {
+          if (hoveredDistrictId) {
+            map.current.setFeatureState(
+              { source: 'districts', id: hoveredDistrictId },
+              { hover: false }
+            );
+          }
+          hoveredDistrictId = e.features[0].id;
           map.current.setFeatureState(
             { source: 'districts', id: hoveredDistrictId },
             { hover: false }
@@ -203,31 +226,6 @@ export default function Map() {
       });
     });
 
-
-    // map.current.on('load', async () => {
-    //   const reports = await getReportsFromDatabase();
-    //   reports.forEach(report => {
-    //     const lng = report.x_coord;
-    //     const lat = report.y_coord;
-
-    //     new maptilersdk.Marker()
-    //       .setLngLat({ lng, lat })
-    //       .addTo(map.current);
-    //   });
-
-    //   map.current.addLayer({
-    //     id: 'reports-layer',
-    //     type: 'fill',
-    //     source: 'reports',
-    //     layout: {
-    //       visibility: activeLayer === 'events' ? 'visible' : 'none',
-    //     },
-    //     paint: {
-    //       'fill-opacity': 0
-    //     }
-    //   });
-    // });
-
     map.current.on('mouseenter', 'reports-layer', () => {
       map.current.getCanvas().style.cursor = 'pointer';
     });
@@ -252,39 +250,18 @@ export default function Map() {
         };
       }
     });
-
-    // map.current.on('click', 'reports-layer', e => {
-    //   const lng = e.lngLat.lng;
-    //   const lat = e.lngLat.lat;
-
-    //   setReportCoords(prev => [...prev, { lng, lat }]);
-
-    //   new maptilersdk.Marker()
-    //     .setLngLat([lng, lat])
-    //     .addTo(map.current);
-
-    //   document.body.classList.add('sidebar-reports-open');
-
-    //   const closeBtn = document.getElementById('closeSideBarReportsbtn');
-    //   if (closeBtn) {
-    //     closeBtn.onclick = ev => {
-    //       ev.stopPropagation();
-    //       document.body.classList.remove('sidebar-reports-open');
-    //     };
-    //   }
-    // });
-
+    
     map.current.on('load', async () => {
-      const image = await map.current.loadImage('/star.png');
+      const image = await map.current.loadImage("/star.png");
       map.current.addImage('pinMetro', image.data);
-
       fetch('/data.csv')
-        .then(res => res.text())
-        .then(text => {
+        .then((res) => res.text())
+        .then((text) => {
           const lines = text.trim().split('\n');
+
           const header = lines[0].split(',').map(h => h.trim());
 
-          const features = lines.slice(1).map(line => {
+          const features = lines.slice(1).map((line) => {
             const cols = line.split(',').map(c => c.trim());
             const obj = {};
 
@@ -299,20 +276,21 @@ export default function Map() {
               type: 'Feature',
               geometry: {
                 type: 'Point',
-                coordinates: [lon, lat]
+                coordinates: [lon, lat],
               },
-              properties: obj
+              properties: obj,
             };
           });
 
           const geojson = {
             type: 'FeatureCollection',
-            features
+            features,
           };
+          console.log(geojson);
 
           map.current.addSource('events', {
             type: 'geojson',
-            data: geojson
+            data: geojson,
           });
 
           map.current.addLayer({
@@ -323,31 +301,65 @@ export default function Map() {
               visibility: activeLayer === 'events' ? 'visible' : 'none',
               'icon-image': 'pinMetro',
               'icon-size': 0.8
-            }
+            },
           });
         });
-    });
+      map.current.on("click", "events", (e) => {
+        if (!e.features?.length) return;
 
-    map.current.on('click', 'events', e => {
-      const props = e.features[0].properties;
-      new maptilersdk.Popup()
-        .setLngLat(e.lngLat)
-        .setHTML(`
-          <h3>${props.name}</h3>
-          <p>${props.date} ${props.hour}</p>
-          <p>${props.place_name}, ${props.street}, ${props.city}</p>
-          ${props.image ? `<img src="${props.image}" style="max-width:150px" />` : ''}
-        `)
-        .addTo(map.current);
+        const props = e.features[0].properties;
+
+        const popup = new maptilersdk.Popup()
+          .setLngLat(e.lngLat)
+          .setHTML(`
+      <h3>${props.name}</h3>
+      <p>${props.date} ${props.hour}</p>
+     <button id="openSidebarBtn" style="
+     margin-left:25px;
+      width:70%;
+      padding: 8px 12px;
+      background: #0B70D5;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+    ">
+      Zobacz więcej
+    </button>
+    `);
+
+        popup.on("open", () => {
+          const popupEl = popup.getElement();
+          const btn = popupEl.querySelector("#openSidebarBtn");
+          if (btn) {
+            btn.addEventListener("click", (ev) => {
+              ev.stopPropagation();
+              ev.preventDefault();
+              setSelectedEvent(props);
+              console.log("klik");
+              document.body.classList.add("sidebar-open");
+            });
+          }
+
+          const closeBtn = document.getElementById("closeSideBarbtn");
+          if (closeBtn) {
+            closeBtn.addEventListener("click", (ev) => {
+              ev.stopPropagation();
+              ev.preventDefault();
+
+              console.log("zamknij");
+              document.body.classList.remove("sidebar-open");
+              setSelectedEvent(null);
+            });
+          }
+        });
+
+        popup.addTo(map.current);
+      });
+
     });
-  }, [
-    gdansk.lng,
-    gdansk.lat,
-    zoom,
-    demography_dataset_id,
-    reports_dataset_id,
-    activeLayer
-  ]);
+  }, [gdansk.lng, gdansk.lat, zoom]);
 
   useEffect(() => {
     if (!map.current) return;
@@ -361,9 +373,8 @@ export default function Map() {
         id === activeLayer ? 'visible' : 'none'
       );
     });
-  }, [activeLayer]);
 
-  const lastReportCoords = reportCoords[reportCoords.length - 1];
+  }, [activeLayer]);
 
   return (
     <div className="map-wrap">
@@ -376,39 +387,82 @@ export default function Map() {
             setActiveLayer('districts-layer');
           }}
         >
-          <i>Demografia</i>
+          <b>Demografia</b>
+          <img src="/group_nav.png" alt="Demografia" />
         </a>
 
         <a
           href="#"
           id="wydarzenia"
-          onClick={e => {
+          onClick={(e) => {
             e.preventDefault();
             setActiveLayer('events');
           }}
         >
-          <i>Usługi</i>
+          <b>Usługi</b>
+          <img src="/star_nav.png" alt="Usługi" />
         </a>
 
         <a
           href="#"
           id="zgloszenia"
-          onClick={e => {
+          onClick={(e) => {
             e.preventDefault();
             setActiveLayer('reports-layer');
           }}
         >
-          <i>Zgłoszenia</i>
+          <b>Zgłoszenia</b>
+          <img src="/symbol_excla_nav.png" alt="Zgłoszenia" />
         </a>
       </div>
 
       <div ref={mapContainer} className="map" />
-
       <div className="sidebar">
-        <OpinionForm />
-        <button id="closeSideBarbtn">-</button>
-      </div>
+        {selectedEvent ? (
+          <div className="event-card">
+            <div className="event-header">
+              <h2>{selectedEvent.name}</h2>
+              <p className="event-datetime">
+                <span>{selectedEvent.date}</span>
+                <span>{selectedEvent.hour}</span>
+              </p>
+            </div>
 
+            {selectedEvent.image && (
+              <img
+                className="event-image"
+                src={selectedEvent.image}
+                alt={selectedEvent.name}
+              />
+            )}
+
+            <div className="event-info">
+              <p>
+                <strong>Miejsce:</strong><br />
+                {selectedEvent.place_name}<br />
+                {selectedEvent.street}<br />
+                {selectedEvent.city}
+              </p>
+            </div>
+
+
+          </div>
+        ) : (
+          <OpinionForm />
+        )}
+
+        <button
+          id="closeSideBarbtn"
+          className="close-sidebar-btn"
+          onClick={(e) => {
+            e.preventDefault();
+            document.body.classList.remove("sidebar-open");
+            setSelectedEvent(null);
+          }}
+        >
+          X
+        </button>
+      </div>
       <div className="sidebar-reports">
         <Suspense fallback={<div>Ładowanie…</div>}>
           <ReportsList
@@ -418,6 +472,9 @@ export default function Map() {
         </Suspense>
         <button id="closeSideBarReportsbtn">-</button>
       </div>
+
+
     </div>
+
   );
 }
