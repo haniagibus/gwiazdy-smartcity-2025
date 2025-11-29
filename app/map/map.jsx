@@ -10,7 +10,7 @@ import '@maptiler/sdk/dist/maptiler-sdk.css';
 import { GeocodingControl } from '@maptiler/geocoding-control/maptilersdk';
 import '@maptiler/geocoding-control/style.css';
 
-const LAYERS = ['districts-layer','airports'];
+const LAYERS = ['districts-layer','events'];
 
 export default function Map() {
   const mapContainer = useRef(null);
@@ -70,6 +70,7 @@ export default function Map() {
           'line-width': 2
         }
       });
+     
 
       const geocoder = new GeocodingControl({
          //bbox: [18.31, 54.29, 18.87, 54.45]
@@ -77,22 +78,7 @@ export default function Map() {
 
       map.current.addControl(geocoder, "bottom-right");
 
-      map.current.addSource('airports', {
-  type: 'geojson',
-  data: 'https://d2ad6b4ur7yvpq.cloudfront.net/naturalearth-3.3.0/ne_10m_ports.geojson'
-});
-const image = await map.current.loadImage('https://docs.maptiler.com/sdk-js/examples/geojson-point/icon-plane-512.png');
-map.current.addImage('plane', image.data);
-map.current.addLayer({
-  'id': 'airports',
-  'type': 'symbol',
-  'source': 'airports',
-  'layout': {
-    'icon-image': 'plane',
-    'icon-size': ['*', ['get', 'scalerank'] ,0.01]
-  },
-  'paint': {}
-});
+    
       // When the user moves their mouse over the state-fill layer, we'll update the
       // feature state for the feature under the mouse.
       map.current.on('mousemove', 'districts-layer', function (e) {
@@ -140,6 +126,69 @@ map.current.addLayer({
         map.current.getCanvas().style.cursor = '';
       });      
     });
+     map.current.on('load', async () => {
+      const image = await map.current.loadImage("/star.png");
+      map.current.addImage('pinMetro', image.data);
+          fetch('/data.csv') 
+            .then((res) => res.text())
+            .then((text) => {
+              const lines = text.trim().split('\n');
+              const header = lines[0].split(',').map(h => h.trim()); 
+
+              const features = lines.slice(1).map((line) => {
+              const cols = line.split(',').map(c => c.trim());      
+                const obj = {};
+                
+                header.forEach((h, i) => {
+                  obj[h] = cols[i];
+                });
+                
+                return {
+                  type: 'Feature',
+                  geometry: {
+                    type: 'Point',
+                    coordinates: [
+                      parseFloat(obj.lon), 
+                      parseFloat(obj.lat),
+                    ],
+                  },
+                  properties: {
+                    id: obj.id,
+                    name: obj.name,
+                  },
+                  
+                };
+              });
+              
+              const geojson = {
+                type: 'FeatureCollection',
+                features,
+              };
+              console.log(geojson);
+              
+
+            
+              map.current.addSource('events', {
+                type: 'geojson',
+                data: geojson,
+              });
+
+              map.current.addLayer({
+                id: 'events',
+                type: 'symbol', 
+                source: 'events',
+                layout:{
+                  visibility:activeLayer==='events'?'visible':'none',
+                  'icon-image': 'pinMetro',
+                  'icon-size': 0.8
+
+                },
+                paint: {
+                  
+                },
+              });
+            });
+        });
  map.current.on("click", (e) => {
     const { lng, lat } = e.lngLat;
 
@@ -187,15 +236,27 @@ useEffect(() => {
     );
   });
 
-  if (map.current.getLayer('district-borders')) {
-    const districtsVisibility = map.current.getLayoutProperty('districts-layer', 'visibility');
-    map.current.setLayoutProperty(
-      'district-borders',
-      'visibility',
-      districtsVisibility || 'none'
-    );
-  }
+  // if (map.current.getLayer('district-borders')) {
+  //   const districtsVisibility = map.current.getLayoutProperty('districts-layer', 'visibility');
+  //   map.current.setLayoutProperty(
+  //     'district-borders',
+  //     'visibility',
+  //     districtsVisibility || 'none'
+  //   );
+  // }
+  // if (map.current.getLayer('events')) {
+  //   const districtsVisibility = map.current.getLayoutProperty('events', 'visibility');
+  //   map.current.setLayoutProperty(
+  //     'district-borders',
+  //     'visibility',
+  //     districtsVisibility || 'none'
+  //   );
+  // }
 }, [activeLayer]);
+
+
+       
+
 
 
   return (
@@ -215,9 +276,9 @@ useEffect(() => {
 </a>
   <a href="#" id="wydarzenia" onClick={(e) => {
     e.preventDefault();
-    setActiveLayer('airports');
+   setActiveLayer('events');
   }}><i>Usługi</i></a>
-  
+
   <a href="#" id="zgloszenia"><i>Zgłoszenia</i></a>
 
 </div>
